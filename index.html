@@ -1,30 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Positionle – Guess the Position</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: sans-serif;
       background: #111;
       color: #fff;
-      padding: 2em;
+      margin: 0;
+      padding: 1em;
       text-align: center;
     }
 
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 100%;
+    }
+
     img {
-      max-width: 40%;
+      max-width: 90%;
       height: auto;
-      margin: 20px;
       border: 3px solid #444;
     }
 
     .tile-board {
       display: grid;
       grid-template-rows: repeat(5, 1fr);
-      grid-gap: 5px;
+      gap: 5px;
       justify-content: center;
-      margin-bottom: 20px;
     }
 
     .tile-row {
@@ -34,8 +42,8 @@
     }
 
     .tile {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       perspective: 1000px;
       position: relative;
     }
@@ -60,7 +68,7 @@
       align-items: center;
       justify-content: center;
       backface-visibility: hidden;
-      font-size: 32px;
+      font-size: 24px;
       font-weight: bold;
       color: white;
       border: 2px solid #444;
@@ -76,25 +84,41 @@
     .flip-back.misplaced { background-color: #c9b458; }
     .flip-back.wrong { background-color: #787c7e; }
 
+    .keyboard-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
     .keyboard {
-      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .keyboard-row {
       display: flex;
       justify-content: center;
-      margin: 5px 0;
+      gap: 4px;
     }
 
     .key {
-      width: 40px;
-      height: 50px;
-      margin: 2px;
-      font-size: 18px;
+      padding: 0 10px;
+      height: 45px;
+      font-size: 16px;
       border: none;
       border-radius: 4px;
       background-color: #444;
       color: white;
+      flex-grow: 1;
+      flex-shrink: 1;
+      flex-basis: 0;
+      max-width: 50px;
+    }
+
+    .key[data-key="ENTER"], .key[data-key="⌫"] {
+      flex-grow: 1.5;
+      max-width: 80px;
     }
 
     .key.correct { background-color: #6aaa64; }
@@ -105,18 +129,46 @@
       margin-top: 20px;
       padding: 10px 20px;
       font-size: 16px;
-      display: none;
+      background-color: #555;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .tile {
+        width: 40px;
+        height: 40px;
+      }
+
+      .flip-front, .flip-back {
+        font-size: 18px;
+      }
+
+      .key {
+        font-size: 14px;
+        height: 40px;
+        max-width: 40px;
+        padding: 0 6px;
+      }
+
+      .key[data-key="ENTER"], .key[data-key="⌫"] {
+        max-width: 70px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🤹 Positionle: Guess the Position</h1>
-  <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px;">
-    <img id="positionImage" src="" alt="Today's position image">
+  <h1>🏅 Positionle: Guess the Position</h1>
+  <div class="game-container">
+    <img id="positionImage" src="" alt="Today's position image" />
     <div class="tile-board" id="tileBoard"></div>
+    <button id="shareButton" style="display:none;" onclick="shareResult()">📤 Share</button>
   </div>
-  <div class="keyboard" id="keyboard"></div>
-  <button id="shareButton">Share Result</button>
+  <div class="keyboard-container">
+    <div class="keyboard" id="keyboard"></div>
+  </div>
 
   <script>
     const maxGuesses = 5;
@@ -124,28 +176,20 @@
     let answerTitle = '';
     let guessCount = 0;
     const todayStr = new Date().toISOString().slice(0, 10);
-    const todayKey = `position-of-day-${todayStr}`;
     let gameOver = false;
     const letterStatus = {};
     let currentGuess = '';
     let positionLink = null;
-    let positionIndex = 0;
-    const allGuesses = [];
 
     function normalize(str) {
-      return str.normalize("NFKD")
-        .replace(/\p{Diacritic}/gu, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '')
-        .trim();
+      return str.normalize("NFKD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
     }
 
     async function loadGame() {
       const res = await fetch('positions_metadata.json');
       const data = await res.json();
-      positionIndex = hashString(todayStr) % data.length;
-      const position = data[positionIndex];
-
+      const index = hashString(todayStr) % data.length;
+      const position = data[index];
       answerTitle = position.title;
       answer = normalize(position.title);
       document.getElementById('positionImage').src = position.image_url;
@@ -182,8 +226,7 @@
             <div class="flip-inner">
               <div class="flip-front"></div>
               <div class="flip-back"></div>
-            </div>
-          `;
+            </div>`;
           row.appendChild(tile);
         }
         board.appendChild(row);
@@ -194,7 +237,6 @@
       const answerArr = answer.split('');
       const guessArr = guess.split('');
       const used = Array(answerArr.length).fill(false);
-
       const result = guessArr.map((letter, i) => {
         if (letter === answerArr[i]) {
           used[i] = true;
@@ -214,20 +256,16 @@
         }
       });
 
-      allGuesses[rowIndex] = result;
-
       guessArr.forEach((letter, i) => {
         const tile = document.getElementById(`tile-${rowIndex}-${i}`);
         const front = tile.querySelector('.flip-front');
         const back = tile.querySelector('.flip-back');
-
         front.textContent = letter.toUpperCase();
         back.textContent = letter.toUpperCase();
         back.classList.add(result[i]);
 
         const prev = letterStatus[letter];
         if (prev !== 'correct') letterStatus[letter] = result[i];
-
         setTimeout(() => tile.classList.add('flipped'), i * 300);
       });
 
@@ -235,21 +273,33 @@
     }
 
     function renderKeyboard() {
-      const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+      const rows = [
+        [..."QWERTYUIOP"],
+        [..."ASDFGHJKL"],
+        ["ENTER", ..."ZXCVBNM", "⌫"]
+      ];
+
       const container = document.getElementById('keyboard');
       container.innerHTML = '';
+
       rows.forEach(row => {
         const div = document.createElement('div');
         div.className = 'keyboard-row';
-        row.split('').forEach(char => {
+
+        row.forEach(char => {
           const btn = document.createElement('button');
           btn.textContent = char;
           btn.className = 'key';
+          btn.setAttribute('data-key', char);
           btn.id = `key-${char}`;
-          btn.disabled = false;
-          btn.onclick = () => handleInput(char);
+          btn.onclick = () => {
+            if (char === 'ENTER') handleEnter();
+            else if (char === '⌫') handleBackspace();
+            else handleInput(char);
+          };
           div.appendChild(btn);
         });
+
         container.appendChild(div);
       });
     }
@@ -313,36 +363,49 @@
         document.body.appendChild(link);
       }
 
-      // Share button logic
-      const shareButton = document.getElementById('shareButton');
-      shareButton.style.display = 'inline-block';
-      shareButton.onclick = () => {
-        const emojiMap = { correct: '🟩', misplaced: '🟨', wrong: '⬛' };
-        const emojiGrid = allGuesses.slice(0, guessCount + 1).map((row, i) => {
-          if (!row) return '';
-          if (won && i === guessCount) {
-            return '🟩'.repeat(answer.length);
-          }
-          return row.map(r => emojiMap[r]).join('');
-        }).join('\n');
+      document.getElementById("shareButton").style.display = "inline-block";
+    }
 
-        const scoreLine = `🧩 Positionle ${positionIndex + 1} ${guessCount + 1}/${maxGuesses}`;
-        const result = `${scoreLine}\n\n${emojiGrid}\n\nPlay here:\nhttps://positionle.com/`;
+    function shareResult() {
+      const board = document.getElementById('tileBoard');
+      const rows = board.querySelectorAll('.tile-row');
+      let finalGuessRow = null;
+      let guessUsed = 0;
+      let grid = '';
 
-        navigator.clipboard.writeText(result).then(() => {
-          alert('Result copied to clipboard!');
+      rows.forEach((row, rowIndex) => {
+        const tiles = row.querySelectorAll('.flip-back');
+        let rowText = '';
+        let hasContent = false;
+        tiles.forEach(tile => {
+          if (tile.textContent) hasContent = true;
+          if (tile.classList.contains('correct')) rowText += '🟩';
+          else if (tile.classList.contains('misplaced')) rowText += '🟨';
+          else rowText += '⬜';
         });
-      };
+        if (hasContent) {
+          grid += rowText + '\n';
+          guessUsed = rowIndex + 1;
+        }
+      });
+
+      const baseDate = new Date('2025-07-31');
+      const today = new Date();
+      const diffDays = Math.floor((today - baseDate) / (1000 * 60 * 60 * 24));
+      const positionleNumber = diffDays;
+
+      const resultText =
+        `Positionle #${positionleNumber} ${guessUsed}/${maxGuesses}\n\n${grid}\nhttps://positionle.com/`;
+
+      navigator.clipboard.writeText(resultText).then(() => {
+        alert("Copied to clipboard!");
+      });
     }
 
     document.addEventListener('keydown', (e) => {
-      if (/^[a-zA-Z]$/.test(e.key)) {
-        handleInput(e.key.toUpperCase());
-      } else if (e.key === 'Backspace') {
-        handleBackspace();
-      } else if (e.key === 'Enter') {
-        handleEnter();
-      }
+      if (/^[a-zA-Z]$/.test(e.key)) handleInput(e.key.toUpperCase());
+      else if (e.key === 'Backspace') handleBackspace();
+      else if (e.key === 'Enter') handleEnter();
     });
 
     loadGame();
