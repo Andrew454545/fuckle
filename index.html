@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Positionle – Guess the Position</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 2em;
+      text-align: center;
+    }
+
+    img {
+      max-width: 40%;
+      height: auto;
+      margin: 20px;
+      border: 3px solid #444;
+    }
+
+    .tile-board {
+      display: grid;
+      grid-template-rows: repeat(5, 1fr);
+      grid-gap: 5px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tile-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .tile {
+      width: 60px;
+      height: 60px;
+      perspective: 1000px;
+      position: relative;
+    }
+
+    .flip-inner {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      position: relative;
+    }
+
+    .flipped .flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-front, .flip-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      font-size: 32px;
+      font-weight: bold;
+      color: white;
+      border: 2px solid #444;
+      background-color: #1a1a1a;
+      box-sizing: border-box;
+    }
+
+    .flip-back {
+      transform: rotateY(180deg);
+    }
+
+    .flip-back.correct { background-color: #6aaa64; }
+    .flip-back.misplaced { background-color: #c9b458; }
+    .flip-back.wrong { background-color: #787c7e; }
+
+    .keyboard {
+      margin-top: 20px;
+    }
+
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin: 5px 0;
+    }
+
+    .key {
+      width: 40px;
+      height: 50px;
+      margin: 2px;
+      font-size: 18px;
+      border: none;
+      border-radius: 4px;
+      background-color: #444;
+      color: white;
+    }
+
+    .key.correct { background-color: #6aaa64; }
+    .key.misplaced { background-color: #c9b458; }
+    .key.wrong { background-color: #787c7e; }
+  </style>
+</head>
+<body>
+  <h1>🥉 Positionle: Guess the Position</h1>
+  <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px;">
+    <img id="positionImage" src="" alt="Today's position image">
+    <div class="tile-board" id="tileBoard"></div>
+  </div>
+  <div class="keyboard" id="keyboard"></div>
+
+  <script>
+    const maxGuesses = 5;
+    let answer = '';
+    let answerTitle = '';
+    let guessCount = 0;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayKey = `position-of-day-${todayStr}`;
+    let gameOver = false;
+    const letterStatus = {};
+    let currentGuess = '';
+    let positionLink = null;
+
+    function normalize(str) {
+      return str.normalize("NFKD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '')
+        .trim();
+    }
+
+    async function loadGame() {
+      const res = await fetch('positions_metadata.json');
+      const data = await res.json();
+      const index = hashString(todayStr) % data.length;
+      const position = data[index];
+
+      answerTitle = position.title;
+      answer = normalize(position.title);
+      document.getElementById('positionImage').src = position.image_url;
+
+      const idMatch = position.image.match(/(\d+)_/);
+      if (idMatch) {
+        positionLink = `https://sexpositions.club/positions/${idMatch[1]}.html`;
+      }
+
+      renderTiles();
+      renderKeyboard();
+    }
+
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function renderTiles() {
+      const board = document.getElementById('tileBoard');
+      board.innerHTML = '';
+      for (let i = 0; i < maxGuesses; i++) {
+        const row = document.createElement('div');
+        row.className = 'tile-row';
+        for (let j = 0; j < answer.length; j++) {
+          const tile = document.createElement('div');
+          tile.className = 'tile';
+          tile.id = `tile-${i}-${j}`;
+          tile.innerHTML = `
+            <div class="flip-inner">
+              <div class="flip-front"></div>
+              <div class="flip-back"></div>
+            </div>
+          `;
+          row.appendChild(tile);
+        }
+        board.appendChild(row);
+      }
+    }
+
+    function updateTiles(rowIndex, guess) {
+      const answerArr = answer.split('');
+      const guessArr = guess.split('');
+      const used = Array(answerArr.length).fill(false);
+
+      const result = guessArr.map((letter, i) => {
+        if (letter === answerArr[i]) {
+          used[i] = true;
+          return 'correct';
+        }
+        return null;
+      });
+
+      guessArr.forEach((letter, i) => {
+        if (result[i]) return;
+        const idx = answerArr.findIndex((l, j) => !used[j] && l === letter);
+        if (idx !== -1) {
+          result[i] = 'misplaced';
+          used[idx] = true;
+        } else {
+          result[i] = 'wrong';
+        }
+      });
+
+      guessArr.forEach((letter, i) => {
+        const tile = document.getElementById(`tile-${rowIndex}-${i}`);
+        const front = tile.querySelector('.flip-front');
+        const back = tile.querySelector('.flip-back');
+
+        front.textContent = letter.toUpperCase();
+        back.textContent = letter.toUpperCase();
+        back.classList.add(result[i]);
+
+        const prev = letterStatus[letter];
+        if (prev !== 'correct') letterStatus[letter] = result[i];
+
+        setTimeout(() => tile.classList.add('flipped'), i * 300);
+      });
+
+      setTimeout(updateKeyboard, guessArr.length * 300);
+    }
+
+    function renderKeyboard() {
+      const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+      const container = document.getElementById('keyboard');
+      container.innerHTML = '';
+      rows.forEach(row => {
+        const div = document.createElement('div');
+        div.className = 'keyboard-row';
+        row.split('').forEach(char => {
+          const btn = document.createElement('button');
+          btn.textContent = char;
+          btn.className = 'key';
+          btn.id = `key-${char}`;
+          btn.disabled = false;
+          btn.onclick = () => handleInput(char);
+          div.appendChild(btn);
+        });
+        container.appendChild(div);
+      });
+    }
+
+    function updateKeyboard() {
+      for (const letter in letterStatus) {
+        const key = document.getElementById(`key-${letter.toUpperCase()}`);
+        if (key) {
+          key.classList.remove('correct', 'misplaced', 'wrong');
+          key.classList.add(letterStatus[letter]);
+        }
+      }
+    }
+
+    function handleInput(char) {
+      if (gameOver || currentGuess.length >= answer.length) return;
+      currentGuess += char.toLowerCase();
+      const tile = document.getElementById(`tile-${guessCount}-${currentGuess.length - 1}`);
+      if (tile) tile.querySelector('.flip-front').textContent = char.toUpperCase();
+    }
+
+    function handleBackspace() {
+      if (gameOver || currentGuess.length === 0) return;
+      const tile = document.getElementById(`tile-${guessCount}-${currentGuess.length - 1}`);
+      if (tile) tile.querySelector('.flip-front').textContent = '';
+      currentGuess = currentGuess.slice(0, -1);
+    }
+
+    function handleEnter() {
+      if (gameOver || currentGuess.length !== answer.length) return;
+      const normalizedGuess = normalize(currentGuess);
+      updateTiles(guessCount, normalizedGuess);
+
+      if (normalizedGuess === answer) {
+        gameOver = true;
+        showResult(true);
+      } else if (++guessCount >= maxGuesses) {
+        gameOver = true;
+        showResult(false);
+      }
+
+      currentGuess = '';
+    }
+
+    function showResult(won) {
+      const message = document.createElement('div');
+      message.style.marginTop = '20px';
+      message.style.fontSize = '20px';
+      message.textContent = won ? '🎉 YOU GOT IT!' : `Out of guesses! Answer was: ${answerTitle}`;
+      document.body.appendChild(message);
+
+      if (positionLink) {
+        const link = document.createElement('a');
+        link.href = positionLink;
+        link.textContent = '🔗 View This Position on SexPositions.club';
+        link.target = '_blank';
+        link.style.display = 'block';
+        link.style.marginTop = '10px';
+        link.style.fontSize = '18px';
+        link.style.color = '#66f';
+        document.body.appendChild(link);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (/^[a-zA-Z]$/.test(e.key)) {
+        handleInput(e.key.toUpperCase());
+      } else if (e.key === 'Backspace') {
+        handleBackspace();
+      } else if (e.key === 'Enter') {
+        handleEnter();
+      }
+    });
+
+    loadGame();
+  </script>
+</body>
+</html>
