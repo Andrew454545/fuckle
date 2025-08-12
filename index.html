@@ -8,11 +8,58 @@
     body {
       font-family: sans-serif;
       background: #111;
-      color: #fff;
+      color: #f1e5e5;
       margin: 0;
       padding: 1em;
       text-align: center;
     }
+
+    /* NSFW Overlay */
+    #nsfwOverlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(17, 17, 17, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .nsfwBox {
+      background: #222;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .nsfwBox h1 { margin: 0 0 12px; }
+
+    .nsfwButtons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nsfwButtons button {
+      background: #444;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .nsfwButtons button:hover { background: #666; }
 
     .game-container {
       display: flex;
@@ -56,9 +103,7 @@
       position: relative;
     }
 
-    .flipped .flip-inner {
-      transform: rotateY(180deg);
-    }
+    .flipped .flip-inner { transform: rotateY(180deg); }
 
     .flip-front, .flip-back {
       position: absolute;
@@ -76,9 +121,7 @@
       box-sizing: border-box;
     }
 
-    .flip-back {
-      transform: rotateY(180deg);
-    }
+    .flip-back { transform: rotateY(180deg); }
 
     .flip-back.correct { background-color: #6aaa64; }
     .flip-back.misplaced { background-color: #c9b458; }
@@ -137,29 +180,27 @@
     }
 
     @media (max-width: 600px) {
-      .tile {
-        width: 40px;
-        height: 40px;
-      }
-
-      .flip-front, .flip-back {
-        font-size: 18px;
-      }
-
-      .key {
-        font-size: 14px;
-        height: 40px;
-        max-width: 40px;
-        padding: 0 6px;
-      }
-
-      .key[data-key="ENTER"], .key[data-key="⌫"] {
-        max-width: 70px;
-      }
+      .tile { width: 40px; height: 40px; }
+      .flip-front, .flip-back { font-size: 18px; }
+      .key { font-size: 14px; height: 40px; max-width: 40px; padding: 0 6px; }
+      .key[data-key="ENTER"], .key[data-key="⌫"] { max-width: 70px; }
     }
   </style>
 </head>
 <body>
+  <!-- NSFW Overlay (shown first) -->
+  <div id="nsfwOverlay">
+    <div class="nsfwBox">
+      <h1>🔞 Welcome to Positionle</h1>
+      <p>The daily game of guess-the-sex-position — for curious minds and flexible bodies.</p>
+      <p><em>This is not safe for work (unless your boss is super chill).</em></p>
+      <div class="nsfwButtons">
+        <button id="playBtn">👉 I’m ready to play</button>
+        <button id="leaveBtn">🙈 Take me back to safety</button>
+      </div>
+    </div>
+  </div>
+
   <h1>🏅 Positionle: Guess the Position</h1>
   <div class="game-container">
     <img id="positionImage" src="" alt="Today's position image" />
@@ -192,9 +233,10 @@
       const position = data[index];
       answerTitle = position.title;
       answer = normalize(position.title);
-      document.getElementById('positionImage').src = position.image_url;
+      document.getElementById('positionImage').src = position.image_url; // uses image_url
 
-      const idMatch = position.image.match(/(\d+)_/);
+      // derive link id from image_url if it contains an ID prefix like "123_..."
+      const idMatch = (position.image_url || '').match(/(\d+)_/);
       if (idMatch) {
         positionLink = `https://sexpositions.club/positions/${idMatch[1]}.html`;
       }
@@ -369,7 +411,6 @@
     function shareResult() {
       const board = document.getElementById('tileBoard');
       const rows = board.querySelectorAll('.tile-row');
-      let finalGuessRow = null;
       let guessUsed = 0;
       let grid = '';
 
@@ -402,13 +443,29 @@
       });
     }
 
-    document.addEventListener('keydown', (e) => {
+    // --- Gating game load behind consent ---
+    function startGame() {
+      // Attach keyboard events only after consent
+      document.addEventListener('keydown', keydownHandler);
+      // Load image/data after consent so nothing NSFW flashes early
+      loadGame();
+    }
+
+    function keydownHandler(e) {
       if (/^[a-zA-Z]$/.test(e.key)) handleInput(e.key.toUpperCase());
       else if (e.key === 'Backspace') handleBackspace();
       else if (e.key === 'Enter') handleEnter();
+    }
+
+    // NSFW overlay buttons
+    document.getElementById('playBtn').addEventListener('click', () => {
+      document.getElementById('nsfwOverlay').style.display = 'none';
+      startGame();
     });
 
-    loadGame();
+    document.getElementById('leaveBtn').addEventListener('click', () => {
+      window.location.href = 'https://google.com';
+    });
   </script>
 </body>
 </html>
