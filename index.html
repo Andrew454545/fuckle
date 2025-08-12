@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <title>Positionle – Guess the Position</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    /* Responsive sizing vars */
     :root { --tile: 50px; --gap: 5px; --word-gap: 12px; }
 
     body {
@@ -41,66 +42,164 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
     .nsfwBox h1 { margin: 0 0 12px; }
-    .nsfwButtons { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .nsfwButtons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
     .nsfwButtons button {
-      background: #444; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;
+      background: #444;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
     }
     .nsfwButtons button:hover { background: #666; }
 
     .game-container {
-      display: flex; flex-direction: column; align-items: center; gap: 20px; max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 100%;
     }
 
-    img { max-width: 100%; height: auto; border: 3px solid #444; }
+    img {
+      max-width: 100%;
+      height: auto;
+      border: 3px solid #444;
+    }
 
-    .tile-board { display: grid; grid-template-rows: repeat(5, 1fr); gap: var(--gap); justify-content: center; width: 100%; }
-    .tile-row { display: flex; justify-content: center; align-items: center; gap: var(--gap); width: 100%; }
+    .tile-board {
+      display: grid;
+      grid-template-rows: repeat(5, 1fr);
+      gap: var(--gap);
+      justify-content: center;
+      width: 100%;
+    }
+
+    .tile-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--gap);
+      width: 100%;
+    }
 
     .tile {
-      width: var(--tile); height: var(--tile);
-      perspective: 1000px; position: relative; flex: 0 0 auto;
+      width: var(--tile);
+      height: var(--tile);
+      perspective: 1000px;
+      position: relative;
+      flex: 0 0 auto;
     }
 
-    /* visual gap for spaces between words */
-    .word-gap { width: var(--word-gap); height: 1px; margin: 0 2px; flex: 0 0 auto; }
+    /* Small visual gap for spaces between words */
+    .word-gap {
+      width: var(--word-gap);   /* tweak to adjust spacing */
+      height: 1px;
+      margin: 0 2px;
+      flex: 0 0 auto;
+    }
 
-    .flip-inner { width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.6s ease; position: relative; }
+    .flip-inner {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      position: relative;
+    }
     .flipped .flip-inner { transform: rotateY(180deg); }
 
     .flip-front, .flip-back {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      backface-visibility: hidden; font-size: calc(var(--tile) * 0.48); font-weight: bold; color: white;
-      border: 2px solid #444; background-color: #1a1a1a; box-sizing: border-box;
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      font-size: calc(var(--tile) * 0.48); /* scale letters with tile */
+      font-weight: bold;
+      color: white;
+      border: 2px solid #444;
+      background-color: #1a1a1a;
+      box-sizing: border-box;
     }
     .flip-back { transform: rotateY(180deg); }
+
     .flip-back.correct { background-color: #6aaa64; }
     .flip-back.misplaced { background-color: #c9b458; }
     .flip-back.wrong { background-color: #3a3a3c; }
 
-    .keyboard-container { width: 100%; max-width: 600px; margin: 20px auto; padding: 0 8px; }
-    .keyboard { display: flex; flex-direction: column; gap: 4px; }
-    .keyboard-row { display: flex; justify-content: center; gap: 4px; }
+    .keyboard-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 0 8px;
+    }
+    .keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+    }
 
     /* Wordle-style keyboard colors */
     .key {
-      padding: 0 10px; height: 45px; font-size: 16px; border: none; border-radius: 4px;
-      background-color: #d3d6da; color: #111;
-      flex-grow: 1; flex-shrink: 1; flex-basis: 0; max-width: 50px;
+      padding: 0 10px;
+      height: 45px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background-color: #d3d6da; /* light gray for UNUSED keys */
+      color: #111;               /* dark text like Wordle */
+      flex-grow: 1;
+      flex-shrink: 1;
+      flex-basis: 0;
+      max-width: 50px;
     }
-    .key[data-key="ENTER"], .key[data-key="⌫"] { flex-grow: 1.5; max-width: 80px; }
+    .key[data-key="ENTER"], .key[data-key="⌫"] {
+      flex-grow: 1.5;
+      max-width: 80px;
+    }
     .key.correct  { background-color: #6aaa64; color: white; }
     .key.misplaced{ background-color: #c9b458; color: white; }
-    .key.wrong    { background-color: #3a3a3c; color: white; }
+    .key.wrong    { background-color: #3a3a3c; color: white; } /* DARK for used-wrong */
 
-    #shareButton { margin-top: 20px; padding: 10px 20px; font-size: 16px; background-color: #555; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    #shareButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #555;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
     /* Confetti Canvas */
-    #confettiCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9500; }
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9500; /* below NSFW overlay (9999), above game */
+    }
 
     @media (max-width: 600px) {
-      :root { --word-gap: 10px; }
       .key { font-size: 14px; height: 40px; max-width: 40px; padding: 0 6px; }
       .key[data-key="ENTER"], .key[data-key="⌫"] { max-width: 70px; }
+      :root { --word-gap: 10px; } /* slightly tighter word gap on phones */
+      /* NOTE: no fixed .tile sizes here—tiles are auto-fit via --tile */
     }
   </style>
 </head>
@@ -122,7 +221,7 @@
   <canvas id="confettiCanvas"></canvas>
 
   <h1>🏅 Positionle: Guess the Position</h1>
-  <div class="game-container" id="gameContainer">
+  <div class="game-container">
     <img id="positionImage" src="" alt="Today's position image" />
     <div class="tile-board" id="tileBoard"></div>
     <button id="shareButton" style="display:none;" onclick="shareResult()">📤 Share</button>
@@ -226,41 +325,46 @@
 
         for (let j = 0; j < displayAnswer.length; j++) {
           if (visibleToAnswerIdx[j] === -1) {
+            // Insert a small spacer where the title has a space
             const gap = document.createElement('div');
             gap.className = 'word-gap';
             row.appendChild(gap);
             continue;
           }
-          const tile = document.createElement('div');
-          tile.className = 'tile';
-          tile.id = `tile-${i}-${j}`; // j is DISPLAY index
-          tile.innerHTML = `
-            <div class="flip-inner">
-              <div class="flip-front"></div>
-              <div class="flip-back"></div>
-            </div>`;
-          row.appendChild(tile);
+
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.id = `tile-${i}-${j}`; // j is DISPLAY index
+        tile.innerHTML = `
+          <div class="flip-inner">
+            <div class="flip-front"></div>
+            <div class="flip-back"></div>
+          </div>`;
+        row.appendChild(tile);
         }
         board.appendChild(row);
       }
     }
 
-    // Compute a tile size that fits the viewport width
+    /* ===== Auto-fit tiles to screen width ===== */
     function fitTiles() {
-      const container = document.getElementById('gameContainer');
-      const maxWidth = Math.min(container.clientWidth, window.innerWidth) - 24; // padding safety
-      const displayLen = displayAnswer.length;
+      // available row width (inside the game column)
+      const container = document.querySelector('.game-container');
+      const available = Math.min(container.clientWidth, window.innerWidth) - 24; // padding safety
+
+      const totalSlots = displayAnswer.length;
       const spaces = (displayAnswer.match(/ /g) || []).length;
-      const letters = displayLen - spaces;
+      const letters = Math.max(1, totalSlots - spaces);
 
-      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 5;
-      const wordGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--word-gap')) || 12;
+      const styles = getComputedStyle(document.documentElement);
+      const gap = parseFloat(styles.getPropertyValue('--gap')) || 5;
+      const wordGap = parseFloat(styles.getPropertyValue('--word-gap')) || 12;
 
-      // total row width = letters*tile + spaces*wordGap + (displayLen-1)*gap
-      const tile = Math.floor((maxWidth - spaces*wordGap - (displayLen - 1)*gap) / Math.max(letters,1));
+      // total width = letters*tile + spaces*wordGap + (totalSlots-1)*gap
+      const tile = Math.floor((available - spaces * wordGap - (totalSlots - 1) * gap) / letters);
 
-      // Clamp to reasonable bounds
-      const clamped = Math.max(28, Math.min(tile, 56));
+      // clamp to keep readable; adjust min if you have super long titles
+      const clamped = Math.max(26, Math.min(tile, 56));
       document.documentElement.style.setProperty('--tile', clamped + 'px');
     }
 
@@ -270,20 +374,27 @@
       const used = Array(answerArr.length).fill(false);
 
       const result = guessArr.map((letter, i) => {
-        if (letter === answerArr[i]) { used[i] = true; return 'correct'; }
+        if (letter === answerArr[i]) {
+          used[i] = true;
+          return 'correct';
+        }
         return null;
       });
 
       guessArr.forEach((letter, i) => {
         if (result[i]) return;
         const idx = answerArr.findIndex((l, j) => !used[j] && l === letter);
-        if (idx !== -1) { result[i] = 'misplaced'; used[idx] = true; }
-        else { result[i] = 'wrong'; }
+        if (idx !== -1) {
+          result[i] = 'misplaced';
+          used[idx] = true;
+        } else {
+          result[i] = 'wrong';
+        }
       });
 
       // Paint tiles using display indices
       guessArr.forEach((letter, i) => {
-        const displayIndex = answerToDisplayIdx[i]; // compact -> display index
+        const displayIndex = answerToDisplayIdx[i]; // map compact answer index -> display index
         const tile = document.getElementById(`tile-${rowIndex}-${displayIndex}`);
         const front = tile.querySelector('.flip-front');
         const back = tile.querySelector('.flip-back');
@@ -299,17 +410,33 @@
     }
 
     function renderKeyboard() {
-      const rows = [[..."QWERTYUIOP"],[..."ASDFGHJKL"],["ENTER", ..."ZXCVBNM", "⌫"]];
+      const rows = [
+        [..."QWERTYUIOP"],
+        [..."ASDFGHJKL"],
+        ["ENTER", ..."ZXCVBNM", "⌫"]
+      ];
+
       const container = document.getElementById('keyboard');
       container.innerHTML = '';
+
       rows.forEach(row => {
-        const div = document.createElement('div'); div.className = 'keyboard-row';
+        const div = document.createElement('div');
+        div.className = 'keyboard-row';
+
         row.forEach(char => {
           const btn = document.createElement('button');
-          btn.textContent = char; btn.className = 'key'; btn.setAttribute('data-key', char); btn.id = `key-${char}`;
-          btn.onclick = () => { if (char === 'ENTER') handleEnter(); else if (char === '⌫') handleBackspace(); else handleInput(char); };
+          btn.textContent = char;
+          btn.className = 'key';
+          btn.setAttribute('data-key', char);
+          btn.id = `key-${char}`;
+          btn.onclick = () => {
+            if (char === 'ENTER') handleEnter();
+            else if (char === '⌫') handleBackspace();
+            else handleInput(char);
+          };
           div.appendChild(btn);
         });
+
         container.appendChild(div);
       });
     }
@@ -317,15 +444,19 @@
     function updateKeyboard() {
       for (const letter in letterStatus) {
         const key = document.getElementById(`key-${letter.toUpperCase()}`);
-        if (key) { key.classList.remove('correct','misplaced','wrong'); key.classList.add(letterStatus[letter]); }
+        if (key) {
+          key.classList.remove('correct', 'misplaced', 'wrong');
+          key.classList.add(letterStatus[letter]);
+        }
       }
     }
 
     function handleInput(char) {
       if (gameOver || currentGuess.length >= answer.length) return;
       currentGuess += char.toLowerCase();
-      const k = currentGuess.length - 1;          // compact index
-      const j = answerToDisplayIdx[k];            // display index
+
+      const k = currentGuess.length - 1;          // index in compact answer
+      const j = answerToDisplayIdx[k];            // display index for that slot
       const tile = document.getElementById(`tile-${guessCount}-${j}`);
       if (tile) tile.querySelector('.flip-front').textContent = char.toUpperCase();
     }
@@ -344,22 +475,33 @@
       const normalizedGuess = normalize(currentGuess);
       updateTiles(guessCount, normalizedGuess);
 
-      if (normalizedGuess === answer) { gameOver = true; showResult(true); }
-      else if (++guessCount >= maxGuesses) { gameOver = true; showResult(false); }
+      if (normalizedGuess === answer) {
+        gameOver = true;
+        showResult(true);
+      } else if (++guessCount >= maxGuesses) {
+        gameOver = true;
+        showResult(false);
+      }
 
       currentGuess = '';
     }
 
     function showResult(won) {
       const message = document.createElement('div');
-      message.style.marginTop = '20px'; message.style.fontSize = '20px';
+      message.style.marginTop = '20px';
+      message.style.fontSize = '20px';
       message.textContent = won ? '🎉 YOU GOT IT!' : `Out of guesses! Answer was: ${answerTitle}`;
       document.body.appendChild(message);
 
       if (positionLink) {
         const link = document.createElement('a');
-        link.href = positionLink; link.textContent = '🔗 View This Position on SexPositions.club'; link.target = '_blank';
-        link.style.display = 'block'; link.style.marginTop = '10px'; link.style.fontSize = '18px'; link.style.color = '#66f';
+        link.href = positionLink;
+        link.textContent = '🔗 View This Position on SexPositions.club';
+        link.target = '_blank';
+        link.style.display = 'block';
+        link.style.marginTop = '10px';
+        link.style.fontSize = '18px';
+        link.style.color = '#66f';
         document.body.appendChild(link);
       }
 
@@ -370,17 +512,23 @@
     function shareResult() {
       const board = document.getElementById('tileBoard');
       const rows = board.querySelectorAll('.tile-row');
-      let guessUsed = 0; let grid = '';
+      let guessUsed = 0;
+      let grid = '';
+
       rows.forEach((row, rowIndex) => {
         const tiles = row.querySelectorAll('.flip-back');
-        let rowText = ''; let hasContent = false;
+        let rowText = '';
+        let hasContent = false;
         tiles.forEach(tile => {
           if (tile.textContent) hasContent = true;
           if (tile.classList.contains('correct')) rowText += '🟩';
           else if (tile.classList.contains('misplaced')) rowText += '🟨';
           else rowText += '⬜';
         });
-        if (hasContent) { grid += rowText + '\n'; guessUsed = rowIndex + 1; }
+        if (hasContent) {
+          grid += rowText + '\n';
+          guessUsed = rowIndex + 1;
+        }
       });
 
       const baseDate = new Date('2025-07-31');
@@ -388,8 +536,12 @@
       const diffDays = Math.floor((today - baseDate) / (1000 * 60 * 60 * 24));
       const positionleNumber = diffDays;
 
-      const resultText = `Positionle #${positionleNumber} ${guessUsed}/${maxGuesses}\n\n${grid}\nhttps://positionle.com/`;
-      navigator.clipboard.writeText(resultText).then(() => alert("Copied to clipboard!"));
+      const resultText =
+        `Positionle #${positionleNumber} ${guessUsed}/${maxGuesses}\n\n${grid}\nhttps://positionle.com/`;
+
+      navigator.clipboard.writeText(resultText).then(() => {
+        alert("Copied to clipboard!");
+      });
     }
 
     // --- Gating game load behind consent ---
@@ -409,10 +561,12 @@
       document.getElementById('nsfwOverlay').style.display = 'none';
       startGame();
     });
-    document.getElementById('leaveBtn').addEventListener('click', () => { window.location.href = 'https://google.com'; });
+    document.getElementById('leaveBtn').addEventListener('click', () => {
+      window.location.href = 'https://google.com';
+    });
 
-    // Resize tiles on viewport changes
-    window.addEventListener('resize', () => fitTiles());
+    // React to viewport changes for mobile
+    window.addEventListener('resize', fitTiles);
     window.addEventListener('orientationchange', () => setTimeout(fitTiles, 50));
 
     // --- Simple confetti ---
@@ -420,39 +574,72 @@
       const canvas = document.getElementById('confettiCanvas');
       const ctx = canvas.getContext('2d');
 
-      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
       resize();
       const onResize = () => resize();
       window.addEventListener('resize', onResize);
 
       const colors = ['#E63946','#F1FA8C','#06D6A0','#118AB2','#F78C6B','#A78BFA','#FFD166'];
-      const gravity = 0.25, drag = 0.005, terminal = 4;
-      const particles = []; const count = 220;
+      const gravity = 0.25;
+      const drag = 0.005;
+      const terminal = 4;
+      const particles = [];
+      const count = 220;
 
       for (let i = 0; i < count; i++) {
-        particles.push({ x: canvas.width*Math.random(), y: -20 - Math.random()*80,
-          w: 8 + Math.random()*6, h: 10 + Math.random()*8,
-          vx: (Math.random()-0.5)*6, vy: Math.random()*-3,
-          rot: Math.random()*Math.PI, vr: (Math.random()-0.5)*0.2,
-          color: colors[Math.floor(Math.random()*colors.length)] });
+        particles.push({
+          x: canvas.width * Math.random(),
+          y: -20 - Math.random() * 80,
+          w: 8 + Math.random() * 6,
+          h: 10 + Math.random() * 8,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * -3,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.2,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
       }
 
-      let running = true; const start = performance.now(); const maxMs = 3000;
+      let running = true;
+      const start = performance.now();
+      const maxMs = 3000; // ~3s
+
       function step(ts) {
         const elapsed = ts - start;
-        if (elapsed > maxMs && particles.every(p => p.y > canvas.height + 40)) running = false;
-        if (!running) { ctx.clearRect(0,0,canvas.width,canvas.height); window.removeEventListener('resize', onResize); return; }
+        if (elapsed > maxMs && particles.every(p => p.y > canvas.height + 40)) {
+          running = false;
+        }
+        if (!running) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          window.removeEventListener('resize', onResize);
+          return;
+        }
 
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => {
-          p.vy = Math.min(p.vy + gravity, terminal); p.vx *= (1 - drag);
-          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-          if (p.x < -50) p.x = canvas.width + 50; if (p.x > canvas.width + 50) p.x = -50;
-          ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle = p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+          p.vy = Math.min(p.vy + gravity, terminal);
+          p.vx *= (1 - drag);
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+
+          if (p.x < -50) p.x = canvas.width + 50;
+          if (p.x > canvas.width + 50) p.x = -50;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          ctx.restore();
         });
 
         requestAnimationFrame(step);
       }
+
       requestAnimationFrame(step);
     }
   </script>
