@@ -331,7 +331,8 @@
       }
       
       // Find the tile ID - need to map typed letter index to answerTitle position
-      let tilePosition = 0;
+      // typedLetters.length - 1 is the index of the letter we just added
+      let tilePosition = -1;
       let letterCount = 0;
       for (let i = 0; i < answerTitle.length; i++) {
         if (answerTitle[i] !== ' ') {
@@ -344,9 +345,14 @@
       }
       
       // Display in the correct tile
-      const tile = document.getElementById(`tile-${guessCount}-${tilePosition}`);
-      if (tile) {
-        tile.querySelector('.flip-front').textContent = char.toUpperCase();
+      if (tilePosition >= 0) {
+        const tile = document.getElementById(`tile-${guessCount}-${tilePosition}`);
+        if (tile) {
+          const front = tile.querySelector('.flip-front');
+          if (front) {
+            front.textContent = char.toUpperCase();
+          }
+        }
       }
     }
 
