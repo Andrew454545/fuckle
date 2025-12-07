@@ -149,8 +149,8 @@
           position = data[index];
         }
       } else {
-        // For today, always use "Me When coopersmith"
-        position = data.find(p => p.title === "Me When coopersmith");
+        // For today, always use "Me when cooper goldsmith"
+        position = data.find(p => p.title === "Me when cooper goldsmith");
         if (!position) {
           // Fallback to daily random position if not found
           const index = hashString(todayStr) % data.length;
@@ -187,19 +187,24 @@
         const row = document.createElement('div');
         row.className = 'tile-row';
         for (let j = 0; j < answerTitle.length; j++) {
-          const tile = document.createElement('div');
-          tile.className = 'tile';
-          tile.id = `tile-${i}-${j}`;
-          const isSpace = answerTitle[j] === ' ';
-          const frontStyle = isSpace ? 'style="border: 2px dashed #666; background-color: #2a2a2a;"' : '';
-          const backStyle = isSpace ? 'style="border: 2px dashed #666;"' : '';
-          tile.innerHTML = `
-            <div class="flip-inner">
-              <div class="flip-front" ${frontStyle}>${isSpace ? ' ' : ''}</div>
-              <div class="flip-back" ${backStyle}></div>
-            </div>
-          `;
-          row.appendChild(tile);
+          if (answerTitle[j] === ' ') {
+            // Add a gap spacer instead of a tile for spaces
+            const spacer = document.createElement('div');
+            spacer.className = 'tile-spacer';
+            spacer.style.width = '20px';
+            row.appendChild(spacer);
+          } else {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.id = `tile-${i}-${j}`;
+            tile.innerHTML = `
+              <div class="flip-inner">
+                <div class="flip-front"></div>
+                <div class="flip-back"></div>
+              </div>
+            `;
+            row.appendChild(tile);
+          }
         }
         board.appendChild(row);
       }
@@ -237,25 +242,27 @@
         }
       });
 
+      // Track tile index separately since spaces don't have tiles
+      let tileIndex = 0;
       guessArr.forEach((letter, i) => {
-        const tile = document.getElementById(`tile-${rowIndex}-${i}`);
+        if (letter === ' ') {
+          // Skip spaces - they don't have tiles
+          return;
+        }
+        const tile = document.getElementById(`tile-${rowIndex}-${tileIndex}`);
+        if (!tile) return;
         const front = tile.querySelector('.flip-front');
         const back = tile.querySelector('.flip-back');
 
-        if (letter === ' ') {
-          front.textContent = ' ';
-          back.textContent = ' ';
-          back.style.border = '2px solid #666';
-        } else {
-          front.textContent = letter.toUpperCase();
-          back.textContent = letter.toUpperCase();
-        }
+        front.textContent = letter.toUpperCase();
+        back.textContent = letter.toUpperCase();
         back.classList.add(result[i]);
 
         const prev = letterStatus[letter];
-        if (prev !== 'correct' && letter !== ' ') letterStatus[letter] = result[i];
+        if (prev !== 'correct') letterStatus[letter] = result[i];
 
-        setTimeout(() => tile.classList.add('flipped'), i * 300);
+        setTimeout(() => tile.classList.add('flipped'), tileIndex * 300);
+        tileIndex++;
       });
 
       setTimeout(updateKeyboard, guessArr.length * 300);
@@ -292,25 +299,53 @@
     }
 
     function handleInput(char) {
-      if (gameOver || currentGuess.length >= answerTitle.length) return;
+      if (gameOver) return;
+      if (char === ' ') return; // Spaces are auto-handled
+      
+      // Find next non-space position in answerTitle
+      let pos = currentGuess.length;
+      while (pos < answerTitle.length && answerTitle[pos] === ' ') {
+        currentGuess += ' ';
+        pos++;
+      }
+      
+      if (pos >= answerTitle.length) return;
+      
       currentGuess += char.toLowerCase();
-      const tile = document.getElementById(`tile-${guessCount}-${currentGuess.length - 1}`);
+      
+      // Find tile index (count non-space characters up to current position)
+      let tileIndex = 0;
+      for (let i = 0; i < pos; i++) {
+        if (answerTitle[i] !== ' ') tileIndex++;
+      }
+      
+      const tile = document.getElementById(`tile-${guessCount}-${tileIndex}`);
       if (tile) {
-        const front = tile.querySelector('.flip-front');
-        if (char === ' ') {
-          front.textContent = ' '; // Show space
-          front.style.border = '2px solid #666'; // Make space visible
-        } else {
-          front.textContent = char.toUpperCase();
-        }
+        tile.querySelector('.flip-front').textContent = char.toUpperCase();
       }
     }
 
     function handleBackspace() {
       if (gameOver || currentGuess.length === 0) return;
-      const tile = document.getElementById(`tile-${guessCount}-${currentGuess.length - 1}`);
-      if (tile) tile.querySelector('.flip-front').textContent = '';
+      
+      // Remove last character
       currentGuess = currentGuess.slice(0, -1);
+      
+      // Remove trailing spaces
+      while (currentGuess.length > 0 && currentGuess[currentGuess.length - 1] === ' ') {
+        currentGuess = currentGuess.slice(0, -1);
+      }
+      
+      // Find tile index for the last non-space character
+      let tileIndex = 0;
+      for (let i = 0; i < currentGuess.length; i++) {
+        if (answerTitle[i] !== ' ') tileIndex++;
+      }
+      
+      if (tileIndex > 0) {
+        const tile = document.getElementById(`tile-${guessCount}-${tileIndex - 1}`);
+        if (tile) tile.querySelector('.flip-front').textContent = '';
+      }
     }
 
     function handleEnter() {
@@ -352,9 +387,6 @@
     document.addEventListener('keydown', (e) => {
       if (/^[a-zA-Z]$/.test(e.key)) {
         handleInput(e.key.toUpperCase());
-      } else if (e.key === ' ') {
-        e.preventDefault();
-        handleInput(' ');
       } else if (e.key === 'Backspace') {
         handleBackspace();
       } else if (e.key === 'Enter') {
