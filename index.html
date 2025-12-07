@@ -419,6 +419,20 @@
 
       currentGuess = '';
       typedLetters = [];
+      
+      // Reset for next guess row
+      if (guessCount < maxGuesses) {
+        // Clear all tiles in the next row
+        for (let j = 0; j < answerTitle.length; j++) {
+          if (answerTitle[j] !== ' ') {
+            const tile = document.getElementById(`tile-${guessCount}-${j}`);
+            if (tile) {
+              const front = tile.querySelector('.flip-front');
+              if (front) front.textContent = '';
+            }
+          }
+        }
+      }
     }
 
     function showResult(won) {
