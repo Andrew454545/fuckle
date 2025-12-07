@@ -448,12 +448,109 @@
       }
     }
 
+    function generateShareText() {
+      const today = new Date().toISOString().slice(0, 10);
+      let shareText = `Positionle ${today}\n`;
+      shareText += `${guessCount}/${maxGuesses}\n\n`;
+      
+      // Generate emoji grid from the guesses
+      for (let row = 0; row < guessCount; row++) {
+        let rowText = '';
+        for (let j = 0; j < answerTitle.length; j++) {
+          if (answerTitle[j] === ' ') continue;
+          const tile = document.getElementById(`tile-${row}-${j}`);
+          if (tile) {
+            const back = tile.querySelector('.flip-back');
+            if (back) {
+              if (back.classList.contains('correct')) {
+                rowText += '🟩';
+              } else if (back.classList.contains('misplaced')) {
+                rowText += '🟨';
+              } else {
+                rowText += '⬛';
+              }
+            }
+          }
+        }
+        shareText += rowText + '\n';
+      }
+      
+      return shareText;
+    }
+
+    async function shareResult() {
+      const shareText = generateShareText();
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Positionle',
+            text: shareText
+          });
+        } catch (err) {
+          // Fall back to clipboard if share is cancelled
+          copyToClipboard(shareText);
+        }
+      } else {
+        copyToClipboard(shareText);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const button = document.getElementById('shareButton');
+        if (button) {
+          const originalText = button.textContent;
+          button.textContent = 'Copied!';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        }
+      }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        const button = document.getElementById('shareButton');
+        if (button) {
+          const originalText = button.textContent;
+          button.textContent = 'Copied!';
+          setTimeout(() => {
+            button.textContent = originalText;
+          }, 2000);
+        }
+      });
+    }
+
     function showResult(won) {
       const message = document.createElement('div');
       message.style.marginTop = '20px';
       message.style.fontSize = '20px';
       message.textContent = won ? '🎉 YOU GOT IT!' : `Out of guesses! Answer was: ${answerTitle}`;
       document.body.appendChild(message);
+
+      // Add share button
+      if (won || guessCount >= maxGuesses) {
+        const shareButton = document.createElement('button');
+        shareButton.id = 'shareButton';
+        shareButton.textContent = '📤 Share';
+        shareButton.style.marginTop = '15px';
+        shareButton.style.padding = '10px 20px';
+        shareButton.style.fontSize = '16px';
+        shareButton.style.backgroundColor = '#6aaa64';
+        shareButton.style.color = 'white';
+        shareButton.style.border = 'none';
+        shareButton.style.borderRadius = '4px';
+        shareButton.style.cursor = 'pointer';
+        shareButton.onclick = shareResult;
+        document.body.appendChild(shareButton);
+      }
 
       if (positionLink) {
         const link = document.createElement('a');
