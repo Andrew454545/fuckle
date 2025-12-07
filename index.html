@@ -115,6 +115,7 @@
     const maxGuesses = 5;
     let answer = '';
     let answerTitle = '';
+    let positionNumber = '';
     let guessCount = 0;
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayKey = `position-of-day-${todayStr}`;
@@ -161,6 +162,7 @@
 
       answerTitle = position.title;
       answer = normalize(position.title);
+      positionNumber = position.number;
       document.getElementById('positionImage').src = position.image;
 
       const idMatch = position.image.match(/(\d+)_/);
@@ -449,8 +451,7 @@
     }
 
     function generateShareText() {
-      const today = new Date().toISOString().slice(0, 10);
-      let shareText = `Positionle ${today}\n`;
+      let shareText = `Positionle #${positionNumber} today\n`;
       shareText += `${guessCount}/${maxGuesses}\n\n`;
       
       // Generate emoji grid from the guesses
@@ -474,6 +475,9 @@
         }
         shareText += rowText + '\n';
       }
+      
+      // Add link
+      shareText += `\n${window.location.origin}${window.location.pathname}`;
       
       return shareText;
     }
