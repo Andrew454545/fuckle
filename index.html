@@ -149,8 +149,8 @@
           position = data[index];
         }
       } else {
-        // For today, always use "The Angus"
-        position = data.find(p => p.title === "The Angus");
+        // For today, always use "Me When coopersmith"
+        position = data.find(p => p.title === "Me When coopersmith");
         if (!position) {
           // Fallback to daily random position if not found
           const index = hashString(todayStr) % data.length;
@@ -190,10 +190,13 @@
           const tile = document.createElement('div');
           tile.className = 'tile';
           tile.id = `tile-${i}-${j}`;
+          const isSpace = answerTitle[j] === ' ';
+          const frontStyle = isSpace ? 'style="border: 2px dashed #666; background-color: #2a2a2a;"' : '';
+          const backStyle = isSpace ? 'style="border: 2px dashed #666;"' : '';
           tile.innerHTML = `
             <div class="flip-inner">
-              <div class="flip-front"></div>
-              <div class="flip-back"></div>
+              <div class="flip-front" ${frontStyle}>${isSpace ? ' ' : ''}</div>
+              <div class="flip-back" ${backStyle}></div>
             </div>
           `;
           row.appendChild(tile);
@@ -212,12 +215,20 @@
           used[i] = true;
           return 'correct';
         }
+        // Spaces must be in the exact position
+        if (letter === ' ' || answerArr[i] === ' ') {
+          return 'wrong';
+        }
         return null;
       });
 
       guessArr.forEach((letter, i) => {
         if (result[i]) return;
-        const idx = answerArr.findIndex((l, j) => !used[j] && l === letter);
+        if (letter === ' ') {
+          result[i] = 'wrong';
+          return;
+        }
+        const idx = answerArr.findIndex((l, j) => !used[j] && l === letter && l !== ' ');
         if (idx !== -1) {
           result[i] = 'misplaced';
           used[idx] = true;
@@ -231,12 +242,18 @@
         const front = tile.querySelector('.flip-front');
         const back = tile.querySelector('.flip-back');
 
-        front.textContent = letter.toUpperCase();
-        back.textContent = letter.toUpperCase();
+        if (letter === ' ') {
+          front.textContent = ' ';
+          back.textContent = ' ';
+          back.style.border = '2px solid #666';
+        } else {
+          front.textContent = letter.toUpperCase();
+          back.textContent = letter.toUpperCase();
+        }
         back.classList.add(result[i]);
 
         const prev = letterStatus[letter];
-        if (prev !== 'correct') letterStatus[letter] = result[i];
+        if (prev !== 'correct' && letter !== ' ') letterStatus[letter] = result[i];
 
         setTimeout(() => tile.classList.add('flipped'), i * 300);
       });
@@ -278,7 +295,15 @@
       if (gameOver || currentGuess.length >= answerTitle.length) return;
       currentGuess += char.toLowerCase();
       const tile = document.getElementById(`tile-${guessCount}-${currentGuess.length - 1}`);
-      if (tile) tile.querySelector('.flip-front').textContent = char.toUpperCase();
+      if (tile) {
+        const front = tile.querySelector('.flip-front');
+        if (char === ' ') {
+          front.textContent = ' '; // Show space
+          front.style.border = '2px solid #666'; // Make space visible
+        } else {
+          front.textContent = char.toUpperCase();
+        }
+      }
     }
 
     function handleBackspace() {
@@ -327,6 +352,9 @@
     document.addEventListener('keydown', (e) => {
       if (/^[a-zA-Z]$/.test(e.key)) {
         handleInput(e.key.toUpperCase());
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        handleInput(' ');
       } else if (e.key === 'Backspace') {
         handleBackspace();
       } else if (e.key === 'Enter') {
