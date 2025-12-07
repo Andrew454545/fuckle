@@ -243,14 +243,14 @@
         }
       });
 
-      // Track tile index separately since spaces don't have tiles
-      let tileIndex = 0;
+      // Use answerTitle position for tile ID (spaces don't have tiles, so skip them)
       guessArr.forEach((letter, i) => {
         if (letter === ' ') {
           // Skip spaces - they don't have tiles
           return;
         }
-        const tile = document.getElementById(`tile-${rowIndex}-${tileIndex}`);
+        // Tile ID uses the position in answerTitle (i), not a separate index
+        const tile = document.getElementById(`tile-${rowIndex}-${i}`);
         if (!tile) return;
         const front = tile.querySelector('.flip-front');
         const back = tile.querySelector('.flip-back');
@@ -262,8 +262,12 @@
         const prev = letterStatus[letter];
         if (prev !== 'correct') letterStatus[letter] = result[i];
 
-        setTimeout(() => tile.classList.add('flipped'), tileIndex * 300);
-        tileIndex++;
+        // Count non-space letters for animation delay
+        let letterCount = 0;
+        for (let j = 0; j < i; j++) {
+          if (answerTitle[j] !== ' ') letterCount++;
+        }
+        setTimeout(() => tile.classList.add('flipped'), letterCount * 300);
       });
 
       setTimeout(updateKeyboard, guessArr.length * 300);
@@ -326,8 +330,21 @@
         }
       }
       
+      // Find the tile ID - need to map typed letter index to answerTitle position
+      let tilePosition = 0;
+      let letterCount = 0;
+      for (let i = 0; i < answerTitle.length; i++) {
+        if (answerTitle[i] !== ' ') {
+          if (letterCount === typedLetters.length - 1) {
+            tilePosition = i;
+            break;
+          }
+          letterCount++;
+        }
+      }
+      
       // Display in the correct tile
-      const tile = document.getElementById(`tile-${guessCount}-${typedLetters.length - 1}`);
+      const tile = document.getElementById(`tile-${guessCount}-${tilePosition}`);
       if (tile) {
         tile.querySelector('.flip-front').textContent = char.toUpperCase();
       }
@@ -355,8 +372,21 @@
         }
       }
       
+      // Find the tile ID for the last letter
+      let tilePosition = 0;
+      let letterCount = 0;
+      for (let i = 0; i < answerTitle.length; i++) {
+        if (answerTitle[i] !== ' ') {
+          if (letterCount === typedLetters.length) {
+            tilePosition = i;
+            break;
+          }
+          letterCount++;
+        }
+      }
+      
       // Clear the tile
-      const tile = document.getElementById(`tile-${guessCount}-${typedLetters.length}`);
+      const tile = document.getElementById(`tile-${guessCount}-${tilePosition}`);
       if (tile) tile.querySelector('.flip-front').textContent = '';
     }
 
