@@ -353,6 +353,19 @@
           const front = tile.querySelector('.flip-front');
           if (front) {
             front.textContent = char.toUpperCase();
+            front.style.color = 'white'; // Ensure text is visible
+          }
+        } else {
+          // Fallback: try to find tile by index if position-based lookup fails
+          console.warn(`Tile not found: ${tileId}, trying alternative lookup`);
+          const allTiles = document.querySelectorAll(`#tileBoard .tile-row:nth-child(${guessCount + 1}) .tile`);
+          const letterIndex = typedLetters.length - 1;
+          if (allTiles[letterIndex]) {
+            const front = allTiles[letterIndex].querySelector('.flip-front');
+            if (front) {
+              front.textContent = char.toUpperCase();
+              front.style.color = 'white';
+            }
           }
         }
       }
