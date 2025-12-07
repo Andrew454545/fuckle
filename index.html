@@ -458,11 +458,14 @@
     }
 
     function getDayOfYear() {
+      // Calculate days since game launch date (August 9, 2025)
+      // This makes December 7, 2025 = day 130
+      const startDate = new Date('2025-08-09');
       const now = new Date();
-      const start = new Date(now.getFullYear(), 0, 0);
-      const diff = now - start;
+      const diff = now - startDate;
       const oneDay = 1000 * 60 * 60 * 24;
-      return Math.floor(diff / oneDay);
+      const daysSinceStart = Math.floor(diff / oneDay) + 1; // +1 to make it 1-indexed
+      return daysSinceStart;
     }
 
     function generateShareText() {
