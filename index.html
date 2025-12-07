@@ -425,6 +425,7 @@
       updateTiles(guessCount, currentGuess); // Pass original guess with spaces
 
       if (normalizedGuess === answer) {
+        guessCount++; // Increment before showing result so count is correct
         gameOver = true;
         showResult(true);
       } else if (++guessCount >= maxGuesses) {
@@ -491,22 +492,9 @@
       return shareText;
     }
 
-    async function shareResult() {
+    function shareResult() {
       const shareText = generateShareText();
-      
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Positionle',
-            text: shareText
-          });
-        } catch (err) {
-          // Fall back to clipboard if share is cancelled
-          copyToClipboard(shareText);
-        }
-      } else {
-        copyToClipboard(shareText);
-      }
+      copyToClipboard(shareText);
     }
 
     function copyToClipboard(text) {
