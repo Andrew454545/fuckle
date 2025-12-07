@@ -306,6 +306,7 @@
     function handleInput(char) {
       if (gameOver) return;
       if (char === ' ') return; // Spaces are auto-handled
+      if (!answerTitle) return; // Make sure answerTitle is set
       
       // Count how many non-space letters are in answerTitle
       const totalLetters = answerTitle.split('').filter(c => c !== ' ').length;
@@ -346,7 +347,8 @@
       
       // Display in the correct tile
       if (tilePosition >= 0) {
-        const tile = document.getElementById(`tile-${guessCount}-${tilePosition}`);
+        const tileId = `tile-${guessCount}-${tilePosition}`;
+        const tile = document.getElementById(tileId);
         if (tile) {
           const front = tile.querySelector('.flip-front');
           if (front) {
