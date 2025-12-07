@@ -356,11 +356,13 @@
           const front = tile.querySelector('.flip-front');
           if (front) {
             front.textContent = char.toUpperCase();
-            front.style.color = 'white'; // Ensure text is visible
+            front.style.color = 'white';
+            front.style.display = 'flex'; // Ensure it's visible
+            front.style.alignItems = 'center';
+            front.style.justifyContent = 'center';
           }
         } else {
           // Fallback: try to find tile by index if position-based lookup fails
-          console.warn(`Tile not found: ${tileId}, trying alternative lookup`);
           const allTiles = document.querySelectorAll(`#tileBoard .tile-row:nth-child(${guessCount + 1}) .tile`);
           const letterIndex = typedLetters.length - 1;
           if (allTiles[letterIndex]) {
@@ -368,9 +370,10 @@
             if (front) {
               front.textContent = char.toUpperCase();
               front.style.color = 'white';
+              front.style.display = 'flex';
+              front.style.alignItems = 'center';
+              front.style.justifyContent = 'center';
             }
-          } else {
-            console.error(`Could not find tile for letter ${char} at index ${letterIndex}`);
           }
         }
       }
