@@ -121,6 +121,7 @@
     let gameOver = false;
     const letterStatus = {};
     let currentGuess = '';
+    let currentGuessLetterCount = 0; // Track how many letters (not spaces) have been typed
     let positionLink = null;
 
     function normalize(str) {
@@ -302,54 +303,98 @@
       if (gameOver) return;
       if (char === ' ') return; // Spaces are auto-handled
       
-      // Find next non-space position in answerTitle
-      let pos = currentGuess.length;
-      while (pos < answerTitle.length && answerTitle[pos] === ' ') {
-        currentGuess += ' ';
-        pos++;
+      // Count how many non-space letters are in answerTitle
+      const totalLetters = answerTitle.split('').filter(c => c !== ' ').length;
+      if (currentGuessLetterCount >= totalLetters) return;
+      
+      // Find the position in answerTitle for this letter index
+      let posInTitle = 0;
+      let letterCount = 0;
+      for (let i = 0; i < answerTitle.length; i++) {
+        if (answerTitle[i] !== ' ') {
+          if (letterCount === currentGuessLetterCount) {
+            posInTitle = i;
+            break;
+          }
+          letterCount++;
+        }
       }
       
-      if (pos >= answerTitle.length) return;
-      
+      // Build currentGuess up to this position (including spaces before)
+      currentGuess = '';
+      for (let i = 0; i < posInTitle; i++) {
+        currentGuess += answerTitle[i];
+      }
       currentGuess += char.toLowerCase();
       
-      // Find tile index (count non-space characters up to current position)
-      let tileIndex = 0;
-      for (let i = 0; i < pos; i++) {
-        if (answerTitle[i] !== ' ') tileIndex++;
-      }
+      currentGuessLetterCount++;
       
-      const tile = document.getElementById(`tile-${guessCount}-${tileIndex}`);
+      // Display in the correct tile
+      const tile = document.getElementById(`tile-${guessCount}-${currentGuessLetterCount - 1}`);
       if (tile) {
         tile.querySelector('.flip-front').textContent = char.toUpperCase();
       }
     }
 
     function handleBackspace() {
-      if (gameOver || currentGuess.length === 0) return;
+      if (gameOver || currentGuessLetterCount === 0) return;
       
-      // Remove last character
-      currentGuess = currentGuess.slice(0, -1);
+      currentGuessLetterCount--;
       
-      // Remove trailing spaces
-      while (currentGuess.length > 0 && currentGuess[currentGuess.length - 1] === ' ') {
-        currentGuess = currentGuess.slice(0, -1);
+      // Rebuild currentGuess up to the new position
+      currentGuess = '';
+      let letterCount = 0;
+      for (let i = 0; i < answerTitle.length; i++) {
+        if (answerTitle[i] !== ' ') {
+          if (letterCount < currentGuessLetterCount) {
+            // Get the letter from the tile
+            const tile = document.getElementById(`tile-${guessCount}-${letterCount}`);
+            if (tile) {
+              const letter = tile.querySelector('.flip-front').textContent.toLowerCase();
+              currentGuess += letter;
+            }
+            letterCount++;
+          } else {
+            break;
+          }
+        } else {
+          if (letterCount < currentGuessLetterCount) {
+            currentGuess += ' ';
+          }
+        }
       }
       
-      // Find tile index for the last non-space character
-      let tileIndex = 0;
-      for (let i = 0; i < currentGuess.length; i++) {
-        if (answerTitle[i] !== ' ') tileIndex++;
-      }
-      
-      if (tileIndex > 0) {
-        const tile = document.getElementById(`tile-${guessCount}-${tileIndex - 1}`);
-        if (tile) tile.querySelector('.flip-front').textContent = '';
-      }
+      // Clear the tile
+      const tile = document.getElementById(`tile-${guessCount}-${currentGuessLetterCount}`);
+      if (tile) tile.querySelector('.flip-front').textContent = '';
     }
 
     function handleEnter() {
-      if (gameOver || currentGuess.length !== answerTitle.length) return;
+      if (gameOver) return;
+      
+      // Count total letters needed
+      const totalLetters = answerTitle.split('').filter(c => c !== ' ').length;
+      if (currentGuessLetterCount !== totalLetters) return;
+      
+      // Rebuild currentGuess to match answerTitle exactly by reading from tiles
+      currentGuess = '';
+      let letterCount = 0;
+      for (let i = 0; i < answerTitle.length; i++) {
+        if (answerTitle[i] !== ' ') {
+          // Get the letter from the tile
+          const tile = document.getElementById(`tile-${guessCount}-${letterCount}`);
+          if (tile) {
+            const letter = tile.querySelector('.flip-front').textContent.toLowerCase();
+            currentGuess += letter;
+            letterCount++;
+          } else {
+            return; // Can't proceed if tile is missing
+          }
+        } else {
+          currentGuess += ' ';
+        }
+      }
+      
       const normalizedGuess = normalize(currentGuess);
       updateTiles(guessCount, currentGuess); // Pass original guess with spaces
 
@@ -362,6 +407,7 @@
       }
 
       currentGuess = '';
+      currentGuessLetterCount = 0;
     }
 
     function showResult(won) {
