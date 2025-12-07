@@ -219,7 +219,8 @@
       const used = Array(answerArr.length).fill(false);
 
       const result = guessArr.map((letter, i) => {
-        if (letter === answerArr[i]) {
+        // Compare case-insensitively
+        if (letter.toLowerCase() === answerArr[i].toLowerCase()) {
           used[i] = true;
           return 'correct';
         }
@@ -236,7 +237,7 @@
           result[i] = 'wrong';
           return;
         }
-        const idx = answerArr.findIndex((l, j) => !used[j] && l === letter && l !== ' ');
+        const idx = answerArr.findIndex((l, j) => !used[j] && l.toLowerCase() === letter.toLowerCase() && l !== ' ');
         if (idx !== -1) {
           result[i] = 'misplaced';
           used[idx] = true;
@@ -368,6 +369,8 @@
               front.textContent = char.toUpperCase();
               front.style.color = 'white';
             }
+          } else {
+            console.error(`Could not find tile for letter ${char} at index ${letterIndex}`);
           }
         }
       }
