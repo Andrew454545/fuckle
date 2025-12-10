@@ -136,37 +136,65 @@
     }
 
     .key {
-      width: 40px;
-      height: 50px;
-      margin: 2px;
-      font-size: 18px;
+      width: 50px;
+      height: 58px;
+      margin: 3px;
+      font-size: 14px;
+      font-weight: bold;
       border: none;
       border-radius: 4px;
-      background-color: #444;
+      background-color: #818384;
       color: white;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .key:hover {
+      background-color: #6a6c6e;
     }
 
     @media (max-width: 768px) {
       .key {
-        width: 30px;
-        height: 40px;
-        font-size: 14px;
-        margin: 1px;
+        width: 40px;
+        height: 48px;
+        font-size: 12px;
+        margin: 2px;
       }
     }
 
     @media (max-width: 480px) {
       .key {
-        width: 25px;
-        height: 35px;
-        font-size: 12px;
+        width: 30px;
+        height: 40px;
+        font-size: 11px;
         margin: 1px;
       }
     }
 
-    .key.correct { background-color: #6aaa64; }
-    .key.misplaced { background-color: #c9b458; }
-    .key.wrong { background-color: #787c7e; }
+    /* Wordle color scheme */
+    .key.correct { 
+      background-color: #6aaa64;
+      color: white;
+    }
+    .key.correct:hover {
+      background-color: #5a9a54;
+    }
+    
+    .key.misplaced { 
+      background-color: #c9b458;
+      color: white;
+    }
+    .key.misplaced:hover {
+      background-color: #b9a448;
+    }
+    
+    .key.wrong { 
+      background-color: #787c7e;
+      color: white;
+    }
+    .key.wrong:hover {
+      background-color: #686c6e;
+    }
   </style>
 </head>
 <body>
@@ -388,8 +416,13 @@
         back.textContent = letter.toUpperCase();
         back.classList.add(result[i]);
 
+        // Update letter status with priority: correct > misplaced > wrong
         const prev = letterStatus[letter];
-        if (prev !== 'correct') letterStatus[letter] = result[i];
+        if (!prev || prev === 'wrong') {
+          letterStatus[letter] = result[i];
+        } else if (prev === 'misplaced' && result[i] === 'correct') {
+          letterStatus[letter] = result[i]; // Upgrade misplaced to correct
+        }
 
         // Count non-space letters for animation delay
         let letterCount = 0;
