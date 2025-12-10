@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Positionle – Guess the Position</title>
   <!-- Force GitHub Pages rebuild for Jungle Gym image -->
   <style>
@@ -9,15 +10,32 @@
       font-family: sans-serif;
       background: #111;
       color: #fff;
-      padding: 2em;
+      padding: 1em;
       text-align: center;
+      margin: 0;
     }
 
-    img {
-      max-width: 40%;
+    #positionImage {
+      max-width: 90%;
+      max-height: 400px;
+      width: auto;
       height: auto;
-      margin: 20px;
+      margin: 20px auto;
       border: 3px solid #444;
+      display: block;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 0.5em;
+      }
+      
+      #positionImage {
+        max-width: 95%;
+        max-height: 300px;
+        margin: 10px auto;
+      }
     }
 
     .tile-board {
@@ -25,7 +43,15 @@
       grid-template-rows: repeat(5, 1fr);
       grid-gap: 5px;
       justify-content: center;
-      margin-bottom: 20px;
+      margin: 20px auto;
+      max-width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .tile-board {
+        margin: 10px auto;
+        grid-gap: 3px;
+      }
     }
 
     .tile-row {
@@ -39,6 +65,28 @@
       height: 60px;
       perspective: 1000px;
       position: relative;
+    }
+
+    @media (max-width: 768px) {
+      .tile {
+        width: 45px;
+        height: 45px;
+      }
+      
+      .flip-front, .flip-back {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .tile {
+        width: 35px;
+        height: 35px;
+      }
+      
+      .flip-front, .flip-back {
+        font-size: 18px;
+      }
     }
 
     .flip-inner {
@@ -98,6 +146,24 @@
       color: white;
     }
 
+    @media (max-width: 768px) {
+      .key {
+        width: 30px;
+        height: 40px;
+        font-size: 14px;
+        margin: 1px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .key {
+        width: 25px;
+        height: 35px;
+        font-size: 12px;
+        margin: 1px;
+      }
+    }
+
     .key.correct { background-color: #6aaa64; }
     .key.misplaced { background-color: #c9b458; }
     .key.wrong { background-color: #787c7e; }
@@ -105,8 +171,8 @@
 </head>
 <body>
   <h1>🥉 Positionle: Guess the Position</h1>
-  <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px;">
-    <img id="positionImage" src="" alt="Today's position image">
+  <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    <img id="positionImage" src="" alt="Today's position image" style="display: none;">
     <div class="tile-board" id="tileBoard"></div>
   </div>
   <div class="keyboard" id="keyboard"></div>
@@ -159,7 +225,13 @@
       answerTitle = position.title;
       answer = normalize(position.title);
       positionNumber = position.number;
-      document.getElementById('positionImage').src = position.image;
+      const imgElement = document.getElementById('positionImage');
+      imgElement.src = position.image;
+      imgElement.style.display = 'block';
+      imgElement.onerror = function() {
+        console.error('Failed to load image:', position.image);
+        this.style.display = 'none';
+      };
 
       const idMatch = position.image.match(/(\d+)_/);
       if (idMatch) {
