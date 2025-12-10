@@ -20,7 +20,7 @@
       max-height: 400px;
       width: auto;
       height: auto;
-      margin: 20px auto;
+      margin: 0 auto;
       border: 3px solid #444;
       display: block;
       border-radius: 8px;
@@ -172,7 +172,9 @@
 <body>
   <h1>🥉 Positionle: Guess the Position</h1>
   <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-    <img id="positionImage" src="" alt="Today's position image" style="display: none;">
+    <div id="imageContainer" style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
+      <img id="positionImage" src="" alt="Loading position image..." style="display: block; min-height: 200px; max-width: 90%; max-height: 400px; width: auto; height: auto; margin: 0 auto; border: 3px solid #444; border-radius: 8px;">
+    </div>
     <div class="tile-board" id="tileBoard"></div>
   </div>
   <div class="keyboard" id="keyboard"></div>
@@ -226,11 +228,51 @@
       answer = normalize(position.title);
       positionNumber = position.number;
       const imgElement = document.getElementById('positionImage');
+      const imageContainer = document.getElementById('imageContainer');
+      
+      console.log('Loading position:', position);
+      console.log('Image path:', position.image);
+      
+      // Clear any existing placeholder
+      const existingPlaceholder = imageContainer.querySelector('.image-placeholder');
+      if (existingPlaceholder) {
+        existingPlaceholder.remove();
+      }
+      
+      imgElement.alt = position.title;
       imgElement.src = position.image;
       imgElement.style.display = 'block';
+      
+      imgElement.onload = function() {
+        console.log('Image loaded successfully:', position.image);
+        this.style.display = 'block';
+        this.style.border = '3px solid #444';
+        this.style.padding = '0';
+        this.style.backgroundColor = 'transparent';
+      };
+      
       imgElement.onerror = function() {
         console.error('Failed to load image:', position.image);
+        // Hide the broken image and show a placeholder
         this.style.display = 'none';
+        
+        // Create a text placeholder
+        const placeholder = document.createElement('div');
+        placeholder.className = 'image-placeholder';
+        placeholder.textContent = `Image: ${position.title}`;
+        placeholder.style.color = '#888';
+        placeholder.style.fontSize = '18px';
+        placeholder.style.padding = '40px';
+        placeholder.style.border = '3px dashed #666';
+        placeholder.style.borderRadius = '8px';
+        placeholder.style.backgroundColor = '#1a1a1a';
+        placeholder.style.minHeight = '200px';
+        placeholder.style.display = 'flex';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.maxWidth = '90%';
+        
+        imageContainer.appendChild(placeholder);
       };
 
       const idMatch = position.image.match(/(\d+)_/);
