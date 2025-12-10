@@ -231,7 +231,6 @@
       const imageContainer = document.getElementById('imageContainer');
       
       console.log('Loading position:', position);
-      console.log('Image path:', position.image);
       
       // Clear any existing placeholder
       const existingPlaceholder = imageContainer.querySelector('.image-placeholder');
@@ -240,11 +239,19 @@
       }
       
       imgElement.alt = position.title;
-      imgElement.src = position.image;
+      
+      // Try local image first, then fallback to image_url
+      let imageSrc = position.image;
+      if (!imageSrc && position.image_url) {
+        imageSrc = position.image_url;
+      }
+      
+      console.log('Trying image:', imageSrc);
+      imgElement.src = imageSrc;
       imgElement.style.display = 'block';
       
       imgElement.onload = function() {
-        console.log('Image loaded successfully:', position.image);
+        console.log('Image loaded successfully:', imageSrc);
         this.style.display = 'block';
         this.style.border = '3px solid #444';
         this.style.padding = '0';
@@ -252,8 +259,17 @@
       };
       
       imgElement.onerror = function() {
-        console.error('Failed to load image:', position.image);
-        // Hide the broken image and show a placeholder
+        console.error('Failed to load local image:', imageSrc);
+        
+        // If local image failed and we have image_url, try that
+        if (imageSrc === position.image && position.image_url) {
+          console.log('Trying fallback image_url:', position.image_url);
+          this.src = position.image_url;
+          return; // Let onerror handle it again if this also fails
+        }
+        
+        // Both failed - show placeholder
+        console.error('All image sources failed');
         this.style.display = 'none';
         
         // Create a text placeholder
