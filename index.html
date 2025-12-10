@@ -151,13 +151,9 @@
           position = data[index];
         }
       } else {
-        // For today, always use "Me when cooper goldsmith"
-        position = data.find(p => p.title === "Me when cooper goldsmith");
-        if (!position) {
-          // Fallback to daily random position if not found
-          const index = hashString(todayStr) % data.length;
-          position = data[index];
-        }
+        // Randomly select a position for today (deterministic based on date)
+        const index = hashString(todayStr) % data.length;
+        position = data[index];
       }
 
       answerTitle = position.title;
