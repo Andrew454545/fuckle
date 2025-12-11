@@ -218,7 +218,7 @@
     let gameOver = false;
     const letterStatus = {};
     let currentGuess = ''; // Will contain full guess with spaces
-    let typedLetters = []; // Array of letters user has typed (no spaces)
+    let typedChars = []; // Array of characters (letters/numbers) user has typed (no spaces)
     let positionLink = null;
 
     function normalize(str) {
@@ -412,16 +412,19 @@
         const front = tile.querySelector('.flip-front');
         const back = tile.querySelector('.flip-back');
 
-        front.textContent = letter.toUpperCase();
-        back.textContent = letter.toUpperCase();
+        // Preserve case for numbers, uppercase for letters
+        const displayChar = /[0-9]/.test(letter) ? letter : letter.toUpperCase();
+        front.textContent = displayChar;
+        back.textContent = displayChar;
         back.classList.add(result[i]);
 
-        // Update letter status with priority: correct > misplaced > wrong
-        const prev = letterStatus[letter];
+        // Update character status with priority: correct > misplaced > wrong
+        const charKey = letter.toLowerCase();
+        const prev = letterStatus[charKey];
         if (!prev || prev === 'wrong') {
-          letterStatus[letter] = result[i];
+          letterStatus[charKey] = result[i];
         } else if (prev === 'misplaced' && result[i] === 'correct') {
-          letterStatus[letter] = result[i]; // Upgrade misplaced to correct
+          letterStatus[charKey] = result[i]; // Upgrade misplaced to correct
         }
 
         // Count non-space letters for animation delay
@@ -456,11 +459,12 @@
     }
 
     function updateKeyboard() {
-      for (const letter in letterStatus) {
-        const key = document.getElementById(`key-${letter.toUpperCase()}`);
+      for (const char in letterStatus) {
+        // Only update keyboard keys (letters), numbers don't have keyboard keys
+        const key = document.getElementById(`key-${char.toUpperCase()}`);
         if (key) {
           key.classList.remove('correct', 'misplaced', 'wrong');
-          key.classList.add(letterStatus[letter]);
+          key.classList.add(letterStatus[char]);
         }
       }
     }
@@ -470,51 +474,53 @@
       if (char === ' ') return; // Spaces are auto-handled
       if (!answerTitle) return; // Make sure answerTitle is set
       
-      // Count how many non-space letters are in answerTitle
-      const totalLetters = answerTitle.split('').filter(c => c !== ' ').length;
-      if (typedLetters.length >= totalLetters) return;
+      // Count how many non-space characters are in answerTitle
+      const totalChars = answerTitle.split('').filter(c => c !== ' ').length;
+      if (typedChars.length >= totalChars) return;
       
-      // Add the typed letter
-      typedLetters.push(char.toLowerCase());
+      // Add the typed character (preserve case for numbers, lowercase for letters)
+      const charToAdd = /[0-9]/.test(char) ? char : char.toLowerCase();
+      typedChars.push(charToAdd);
       
-      // Build currentGuess by inserting typed letters into answerTitle structure
+      // Build currentGuess by inserting typed characters into answerTitle structure
       currentGuess = '';
-      let letterIndex = 0;
+      let charIndex = 0;
       for (let i = 0; i < answerTitle.length; i++) {
         if (answerTitle[i] === ' ') {
           currentGuess += ' ';
         } else {
-          if (letterIndex < typedLetters.length) {
-            currentGuess += typedLetters[letterIndex];
-            letterIndex++;
+          if (charIndex < typedChars.length) {
+            currentGuess += typedChars[charIndex];
+            charIndex++;
           } else {
-            break; // Stop if we've used all typed letters
+            break; // Stop if we've used all typed characters
           }
         }
       }
       
-      // Find the tile ID - need to map typed letter index to answerTitle position
-      // typedLetters.length - 1 is the index of the letter we just added
+      // Find the tile ID - need to map typed character index to answerTitle position
+      // typedChars.length - 1 is the index of the character we just added
       let tilePosition = -1;
-      let letterCount = 0;
+      let charCount = 0;
       for (let i = 0; i < answerTitle.length; i++) {
         if (answerTitle[i] !== ' ') {
-          if (letterCount === typedLetters.length - 1) {
+          if (charCount === typedChars.length - 1) {
             tilePosition = i;
             break;
           }
-          letterCount++;
+          charCount++;
         }
       }
       
-      // Display in the correct tile
+      // Display in the correct tile (preserve case for numbers)
+      const displayChar = /[0-9]/.test(char) ? char : char.toUpperCase();
       if (tilePosition >= 0) {
         const tileId = `tile-${guessCount}-${tilePosition}`;
         const tile = document.getElementById(tileId);
         if (tile) {
           const front = tile.querySelector('.flip-front');
           if (front) {
-            front.textContent = char.toUpperCase();
+            front.textContent = displayChar;
             front.style.color = 'white';
             front.style.display = 'flex'; // Ensure it's visible
             front.style.alignItems = 'center';
@@ -523,11 +529,11 @@
         } else {
           // Fallback: try to find tile by index if position-based lookup fails
           const allTiles = document.querySelectorAll(`#tileBoard .tile-row:nth-child(${guessCount + 1}) .tile`);
-          const letterIndex = typedLetters.length - 1;
-          if (allTiles[letterIndex]) {
-            const front = allTiles[letterIndex].querySelector('.flip-front');
+          const charIndex = typedChars.length - 1;
+          if (allTiles[charIndex]) {
+            const front = allTiles[charIndex].querySelector('.flip-front');
             if (front) {
-              front.textContent = char.toUpperCase();
+              front.textContent = displayChar;
               front.style.color = 'white';
               front.style.display = 'flex';
               front.style.alignItems = 'center';
@@ -539,37 +545,37 @@
     }
 
     function handleBackspace() {
-      if (gameOver || typedLetters.length === 0) return;
+      if (gameOver || typedChars.length === 0) return;
       
-      // Remove last typed letter
-      typedLetters.pop();
+      // Remove last typed character
+      typedChars.pop();
       
       // Rebuild currentGuess
       currentGuess = '';
-      let letterIndex = 0;
+      let charIndex = 0;
       for (let i = 0; i < answerTitle.length; i++) {
         if (answerTitle[i] === ' ') {
           currentGuess += ' ';
         } else {
-          if (letterIndex < typedLetters.length) {
-            currentGuess += typedLetters[letterIndex];
-            letterIndex++;
+          if (charIndex < typedChars.length) {
+            currentGuess += typedChars[charIndex];
+            charIndex++;
           } else {
             break;
           }
         }
       }
       
-      // Find the tile ID for the last letter
+      // Find the tile ID for the last character
       let tilePosition = 0;
-      let letterCount = 0;
+      let charCount = 0;
       for (let i = 0; i < answerTitle.length; i++) {
         if (answerTitle[i] !== ' ') {
-          if (letterCount === typedLetters.length) {
+          if (charCount === typedChars.length) {
             tilePosition = i;
             break;
           }
-          letterCount++;
+          charCount++;
         }
       }
       
@@ -581,11 +587,11 @@
     function handleEnter() {
       if (gameOver) return;
       
-      // Count total letters needed
-      const totalLetters = answerTitle.split('').filter(c => c !== ' ').length;
-      if (typedLetters.length !== totalLetters) return;
+      // Count total characters needed
+      const totalChars = answerTitle.split('').filter(c => c !== ' ').length;
+      if (typedChars.length !== totalChars) return;
       
-      // currentGuess should already be built correctly from typedLetters
+      // currentGuess should already be built correctly from typedChars
       const normalizedGuess = normalize(currentGuess);
       updateTiles(guessCount, currentGuess); // Pass original guess with spaces
 
@@ -599,7 +605,7 @@
       }
 
       currentGuess = '';
-      typedLetters = [];
+      typedChars = [];
       
       // Reset for next guess row
       if (guessCount < maxGuesses) {
@@ -735,8 +741,8 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (/^[a-zA-Z]$/.test(e.key)) {
-        handleInput(e.key.toUpperCase());
+      if (/^[a-zA-Z0-9]$/.test(e.key)) {
+        handleInput(e.key);
       } else if (e.key === 'Backspace') {
         handleBackspace();
       } else if (e.key === 'Enter') {
