@@ -149,7 +149,7 @@
       transition: background-color 0.2s;
     }
 
-    .key:hover {
+    .key:hover:not(.correct):not(.misplaced):not(.wrong) {
       background-color: #6a6c6e;
     }
 
@@ -189,11 +189,11 @@
     }
     
     .key.wrong { 
-      background-color: #787c7e;
+      background-color: #3a3c3e;
       color: white;
     }
     .key.wrong:hover {
-      background-color: #686c6e;
+      background-color: #2a2c2e;
     }
   </style>
 </head>
