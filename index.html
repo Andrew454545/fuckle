@@ -271,12 +271,12 @@
         position = data.find(p => p.number === positionParam);
         if (!position) {
           // Fallback to random if not found
-          const index = hashString(todayStr) % data.length;
+          const index = Math.floor(Math.random() * data.length);
           position = data[index];
         }
       } else {
-        // Randomly select a position for today (deterministic based on date)
-        const index = hashString(todayStr) % data.length;
+        // Randomly select a position
+        const index = Math.floor(Math.random() * data.length);
         position = data[index];
       }
 
