@@ -195,6 +195,34 @@
     .key.wrong:hover {
       background-color: #2a2c2e;
     }
+
+    .key.enter-key {
+      width: auto;
+      min-width: 80px;
+      font-size: 12px;
+    }
+
+    .key.backspace-key {
+      width: auto;
+      min-width: 80px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .key.enter-key,
+      .key.backspace-key {
+        min-width: 60px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .key.enter-key,
+      .key.backspace-key {
+        min-width: 50px;
+        font-size: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -442,7 +470,9 @@
       const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
       const container = document.getElementById('keyboard');
       container.innerHTML = '';
-      rows.forEach(row => {
+      
+      // First two rows (QWERTYUIOP and ASDFGHJKL)
+      rows.slice(0, 2).forEach(row => {
         const div = document.createElement('div');
         div.className = 'keyboard-row';
         row.split('').forEach(char => {
@@ -456,6 +486,37 @@
         });
         container.appendChild(div);
       });
+      
+      // Bottom row with Enter, ZXCVBNM, and Backspace
+      const bottomRow = document.createElement('div');
+      bottomRow.className = 'keyboard-row';
+      
+      // Enter key
+      const enterBtn = document.createElement('button');
+      enterBtn.textContent = 'ENTER';
+      enterBtn.className = 'key enter-key';
+      enterBtn.onclick = handleEnter;
+      bottomRow.appendChild(enterBtn);
+      
+      // Middle letters (ZXCVBNM)
+      rows[2].split('').forEach(char => {
+        const btn = document.createElement('button');
+        btn.textContent = char;
+        btn.className = 'key';
+        btn.id = `key-${char}`;
+        btn.disabled = false;
+        btn.onclick = () => handleInput(char);
+        bottomRow.appendChild(btn);
+      });
+      
+      // Backspace key
+      const backspaceBtn = document.createElement('button');
+      backspaceBtn.textContent = '⌫';
+      backspaceBtn.className = 'key backspace-key';
+      backspaceBtn.onclick = handleBackspace;
+      bottomRow.appendChild(backspaceBtn);
+      
+      container.appendChild(bottomRow);
     }
 
     function updateKeyboard() {
