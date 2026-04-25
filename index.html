@@ -170,6 +170,18 @@
       border: 1px solid #444;
       background: #000;
     }
+
+    .share-wrap {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .share-wrap button.ghost {
+      background: #333;
+    }
   </style>
 </head>
 <body>
@@ -227,6 +239,7 @@
     /** 1 = first photo visible before any guesses; increases after each guess (capped). */
     let revealedCount = 1;
     let gameOver = false;
+    let shareUIAdded = false;
 
     const priceInput = document.getElementById("priceInput");
     const guessButton = document.getElementById("guessButton");
@@ -321,6 +334,88 @@
       statusEl.className = `status ${cls}`.trim();
     }
 
+    function rowEmojiForGuess(guess) {
+      if (withinFivePercent(guess, product.price)) return "🎯";
+      if (guess > product.price) return "⬆️";
+      if (guess < product.price) return "⬇️";
+      return "—";
+    }
+
+    function buildShareText(won) {
+      const lines = [];
+      lines.push("5ft Judy Price Guessr");
+      lines.push(won ? `Won ${guesses.length}/${maxGuesses} ✅` : `Lost ${guesses.length}/${maxGuesses} ❌`);
+      lines.push("");
+      guesses.forEach((g) => lines.push(rowEmojiForGuess(g)));
+      lines.push("");
+      lines.push(`${window.location.origin}${window.location.pathname}`);
+      return lines.join("\n");
+    }
+
+    function copyTextToClipboard(text, triggerButton) {
+      const flash = () => {
+        if (!triggerButton) return;
+        const prev = triggerButton.textContent;
+        triggerButton.textContent = "Copied!";
+        setTimeout(() => {
+          triggerButton.textContent = prev;
+        }, 2000);
+      };
+      return navigator.clipboard.writeText(text).then(flash).catch(() => {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        flash();
+      });
+    }
+
+    async function shareResults(won, triggerButton, mode) {
+      const text = buildShareText(won);
+      const title = "5ft Judy Price Guessr";
+      if (mode === "copy") {
+        await copyTextToClipboard(text, triggerButton);
+        return;
+      }
+      try {
+        if (navigator.share) {
+          await navigator.share({ title, text });
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+      await copyTextToClipboard(text, triggerButton);
+    }
+
+    function ensureShareUI(won) {
+      if (shareUIAdded) return;
+      shareUIAdded = true;
+      const wrap = document.createElement("div");
+      wrap.className = "share-wrap";
+      wrap.setAttribute("role", "group");
+      wrap.setAttribute("aria-label", "Share results");
+
+      const shareBtn = document.createElement("button");
+      shareBtn.type = "button";
+      shareBtn.textContent = "Share results";
+      shareBtn.addEventListener("click", () => shareResults(won, shareBtn, "share"));
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "ghost";
+      copyBtn.textContent = "Copy text";
+      copyBtn.addEventListener("click", () => shareResults(won, copyBtn, "copy"));
+
+      wrap.appendChild(shareBtn);
+      wrap.appendChild(copyBtn);
+      guessListEl.after(wrap);
+    }
+
     function handleGuess() {
       if (gameOver) return;
       const guess = Number(priceInput.value);
@@ -336,18 +431,21 @@
       if (withinFivePercent(guess, product.price)) {
         gameOver = true;
         setStatus(`You win. ${formatMoney(guess)} is within 5% of the real price (${formatMoney(product.price)}).`, "win");
+        ensureShareUI(true);
       } else if (guesses.length >= maxGuesses) {
         gameOver = true;
         setStatus(`Out of guesses. The price is ${formatMoney(product.price)}.`, "lose");
+        ensureShareUI(false);
       } else {
         const remaining = maxGuesses - guesses.length;
         setStatus(`Not within 5% yet. ${remaining} guess${remaining === 1 ? "" : "es"} left.`);
       }
 
       guessButton.disabled = gameOver;
+      priceInput.disabled = gameOver;
       updateVideoVisibility();
       priceInput.value = "";
-      priceInput.focus();
+      if (!gameOver) priceInput.focus();
     }
 
     guessButton.addEventListener("click", handleGuess);
