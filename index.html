@@ -317,14 +317,18 @@
       }
     }
 
+    function arrowEmojiForGuess(guess) {
+      if (withinFivePercent(guess, product.price)) return "🎯";
+      if (guess > product.price) return "🔼";
+      if (guess < product.price) return "🔽";
+      return "—";
+    }
+
     function renderGuesses() {
       guessListEl.innerHTML = "";
       guesses.forEach((guess, index) => {
         const li = document.createElement("li");
-        let hint = "Exact";
-        if (guess > product.price) hint = "Too high";
-        else if (guess < product.price) hint = "Too low";
-        li.textContent = `Guess ${index + 1}: ${formatMoney(guess)} — ${hint}`;
+        li.textContent = `Guess ${index + 1}: ${formatMoney(guess)} — ${arrowEmojiForGuess(guess)}`;
         guessListEl.appendChild(li);
       });
     }
@@ -334,19 +338,12 @@
       statusEl.className = `status ${cls}`.trim();
     }
 
-    function rowEmojiForGuess(guess) {
-      if (withinFivePercent(guess, product.price)) return "🎯";
-      if (guess > product.price) return "⬆️";
-      if (guess < product.price) return "⬇️";
-      return "—";
-    }
-
     function buildShareText(won) {
       const lines = [];
       lines.push("5ft Judy Price Guessr");
       lines.push(won ? `Won ${guesses.length}/${maxGuesses} ✅` : `Lost ${guesses.length}/${maxGuesses} ❌`);
       lines.push("");
-      guesses.forEach((g) => lines.push(rowEmojiForGuess(g)));
+      guesses.forEach((g) => lines.push(arrowEmojiForGuess(g)));
       lines.push("");
       lines.push(`${window.location.origin}${window.location.pathname}`);
       return lines.join("\n");
