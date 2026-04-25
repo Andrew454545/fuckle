@@ -317,7 +317,8 @@
       }
     }
 
-    function arrowEmojiForGuess(guess) {
+    /** Emoji row for shared results only (not shown next to each live guess). */
+    function shareEmojiForGuess(guess) {
       if (withinFivePercent(guess, product.price)) return "🎯";
       if (guess > product.price) return "🔼";
       if (guess < product.price) return "🔽";
@@ -328,7 +329,10 @@
       guessListEl.innerHTML = "";
       guesses.forEach((guess, index) => {
         const li = document.createElement("li");
-        li.textContent = `Guess ${index + 1}: ${formatMoney(guess)} — ${arrowEmojiForGuess(guess)}`;
+        let hint = "Exact";
+        if (guess > product.price) hint = "Too high";
+        else if (guess < product.price) hint = "Too low";
+        li.textContent = `Guess ${index + 1}: ${formatMoney(guess)} — ${hint}`;
         guessListEl.appendChild(li);
       });
     }
@@ -343,7 +347,7 @@
       lines.push("5ft Judy Price Guessr");
       lines.push(won ? `Won ${guesses.length}/${maxGuesses} ✅` : `Lost ${guesses.length}/${maxGuesses} ❌`);
       lines.push("");
-      guesses.forEach((g) => lines.push(arrowEmojiForGuess(g)));
+      guesses.forEach((g) => lines.push(shareEmojiForGuess(g)));
       lines.push("");
       lines.push(`${window.location.origin}${window.location.pathname}`);
       return lines.join("\n");
