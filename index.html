@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5ft Judy Price Guessr</title>
+  <title>5ft tall anatomically correct Judy Hopps Doll Price Guessr</title>
   <style>
     :root {
       color-scheme: dark;
@@ -186,7 +186,7 @@
 </head>
 <body>
   <main class="app">
-    <h1>5ft Judy Price Guessr</h1>
+    <h1>5ft tall anatomically correct Judy Hopps Doll Price Guessr</h1>
     <p>Guess the current product price. You win if your guess is within <strong>5%</strong>. The <strong>first photo</strong> is shown up front; each guess advances to the next when available. After your <strong>second guess</strong>, the <strong>product video</strong> appears below the photos. Full description is under the guesses.</p>
 
     <div class="input-row">
@@ -210,6 +210,8 @@
   </main>
 
   <script>
+    const GAME_TITLE = "5ft tall anatomically correct Judy Hopps Doll Price Guessr";
+
     const product = {
       name: "5ft Tall Life Size Judy Hopps Sex Doll",
       price: 2499,
@@ -343,14 +345,11 @@
     }
 
     function buildShareText(won) {
-      const lines = [];
-      lines.push("5ft Judy Price Guessr");
-      lines.push(won ? `Won ${guesses.length}/${maxGuesses} ✅` : `Lost ${guesses.length}/${maxGuesses} ❌`);
-      lines.push("");
-      guesses.forEach((g) => lines.push(shareEmojiForGuess(g)));
-      lines.push("");
-      lines.push(`${window.location.origin}${window.location.pathname}`);
-      return lines.join("\n");
+      const score = won ? `Won ${guesses.length}/${maxGuesses} ✅` : `Lost ${guesses.length}/${maxGuesses} ❌`;
+      const emojiRow = guesses.map((g) => shareEmojiForGuess(g)).join(" ");
+      const url = `${window.location.origin}${window.location.pathname}`;
+      if (!guesses.length) return `${GAME_TITLE} | ${score}\n${url}`;
+      return `${GAME_TITLE} | ${score} | ${emojiRow}\n${url}`;
     }
 
     function copyTextToClipboard(text, triggerButton) {
@@ -377,7 +376,7 @@
 
     async function shareResults(won, triggerButton, mode) {
       const text = buildShareText(won);
-      const title = "5ft Judy Price Guessr";
+      const title = GAME_TITLE;
       if (mode === "copy") {
         await copyTextToClipboard(text, triggerButton);
         return;
