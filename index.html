@@ -3,815 +3,253 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Positionle – Guess the Position</title>
-  <!-- Force GitHub Pages rebuild for Jungle Gym image -->
+  <title>Judy Price Guessr</title>
   <style>
+    :root {
+      color-scheme: dark;
+    }
+
     body {
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 1em;
-      text-align: center;
       margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
     }
 
-    #positionImage {
-      max-width: 90%;
-      max-height: 400px;
-      width: auto;
-      height: auto;
-      margin: 0 auto;
-      border: 3px solid #444;
-      display: block;
+    .app {
+      width: min(900px, 100%);
+      background: #1b1b1b;
+      border: 1px solid #2b2b2b;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: #c9c9c9;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    input[type="number"] {
+      background: #0f0f0f;
+      color: #fff;
+      border: 1px solid #444;
       border-radius: 8px;
+      padding: 10px 12px;
+      width: 180px;
+      font-size: 1rem;
     }
 
-    @media (max-width: 768px) {
-      body {
-        padding: 0.5em;
-      }
-      
-      #positionImage {
-        max-width: 95%;
-        max-height: 300px;
-        margin: 10px auto;
-      }
-    }
-
-    .tile-board {
-      display: grid;
-      grid-template-rows: repeat(5, 1fr);
-      grid-gap: 5px;
-      justify-content: center;
-      margin: 20px auto;
-      max-width: 100%;
-    }
-
-    @media (max-width: 768px) {
-      .tile-board {
-        margin: 10px auto;
-        grid-gap: 3px;
-      }
-    }
-
-    .tile-row {
-      display: flex;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .tile {
-      width: 60px;
-      height: 60px;
-      perspective: 1000px;
-      position: relative;
-    }
-
-    @media (max-width: 768px) {
-      .tile {
-        width: 45px;
-        height: 45px;
-      }
-      
-      .flip-front, .flip-back {
-        font-size: 24px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .tile {
-        width: 35px;
-        height: 35px;
-      }
-      
-      .flip-front, .flip-back {
-        font-size: 18px;
-      }
-    }
-
-    .flip-inner {
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.6s ease;
-      position: relative;
-    }
-
-    .flipped .flip-inner {
-      transform: rotateY(180deg);
-    }
-
-    .flip-front, .flip-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backface-visibility: hidden;
-      font-size: 32px;
-      font-weight: bold;
-      color: white;
-      border: 2px solid #444;
-      background-color: #1a1a1a;
-      box-sizing: border-box;
-    }
-
-    .flip-back {
-      transform: rotateY(180deg);
-    }
-
-    .flip-back.correct { background-color: #6aaa64; }
-    .flip-back.misplaced { background-color: #c9b458; }
-    .flip-back.wrong { background-color: #787c7e; }
-
-    .keyboard {
-      margin-top: 20px;
-    }
-
-    .keyboard-row {
-      display: flex;
-      justify-content: center;
-      margin: 5px 0;
-    }
-
-    .key {
-      width: 50px;
-      height: 58px;
-      margin: 3px;
-      font-size: 14px;
-      font-weight: bold;
-      border: none;
-      border-radius: 4px;
-      background-color: #818384;
-      color: white;
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #5e8bff;
+      color: #fff;
+      font-weight: 600;
+      padding: 10px 14px;
       cursor: pointer;
-      transition: background-color 0.2s;
     }
 
-    .key:hover:not(.correct):not(.misplaced):not(.wrong) {
-      background-color: #6a6c6e;
+    button.secondary {
+      background: #333;
     }
 
-    @media (max-width: 768px) {
-      .key {
-        width: 40px;
-        height: 48px;
-        font-size: 12px;
-        margin: 2px;
-      }
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
     }
 
-    @media (max-width: 480px) {
-      .key {
-        width: 30px;
-        height: 40px;
-        font-size: 11px;
-        margin: 1px;
-      }
+    .status {
+      min-height: 24px;
+      margin: 8px 0 16px;
+      font-weight: 600;
     }
 
-    /* Wordle color scheme */
-    .key.correct { 
-      background-color: #6aaa64;
-      color: white;
-    }
-    .key.correct:hover {
-      background-color: #5a9a54;
-    }
-    
-    .key.misplaced { 
-      background-color: #c9b458;
-      color: white;
-    }
-    .key.misplaced:hover {
-      background-color: #b9a448;
-    }
-    
-    .key.wrong { 
-      background-color: #3a3c3e;
-      color: white;
-    }
-    .key.wrong:hover {
-      background-color: #2a2c2e;
+    .status.win {
+      color: #66d17a;
     }
 
-    .key.enter-key {
-      width: auto;
-      min-width: 80px;
-      font-size: 12px;
+    .status.lose {
+      color: #ff7878;
     }
 
-    .key.backspace-key {
-      width: auto;
-      min-width: 80px;
-      font-size: 12px;
+    .guess-list {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.5;
     }
 
-    @media (max-width: 768px) {
-      .key.enter-key,
-      .key.backspace-key {
-        min-width: 60px;
-        font-size: 11px;
-      }
+    .images {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
     }
 
-    @media (max-width: 480px) {
-      .key.enter-key,
-      .key.backspace-key {
-        min-width: 50px;
-        font-size: 10px;
-      }
+    .images img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #444;
+      background: #0b0b0b;
+    }
+
+    .meta {
+      margin-top: 10px;
+      color: #aaaaaa;
+      font-size: 0.95rem;
     }
   </style>
 </head>
 <body>
-  <h1>🥉 Positionle: Guess the Position</h1>
-  <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-    <div id="imageContainer" style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
-      <img id="positionImage" src="" alt="Loading position image..." style="display: block; min-height: 200px; max-width: 90%; max-height: 400px; width: auto; height: auto; margin: 0 auto; border: 3px solid #444; border-radius: 8px;">
+  <main class="app">
+    <h1>Judy Price Guessr</h1>
+    <p>Guess the current product price. You win if your guess is within <strong>5%</strong>. One image is revealed after each guess.</p>
+
+    <div class="input-row">
+      <input id="priceInput" type="number" min="1" step="1" placeholder="Enter price in USD">
+      <button id="guessButton">Submit Guess</button>
+      <button id="resetButton" class="secondary" type="button">New Round</button>
     </div>
-    <div class="tile-board" id="tileBoard"></div>
-  </div>
-  <div class="keyboard" id="keyboard"></div>
+
+    <div id="status" class="status"></div>
+
+    <ol id="guessList" class="guess-list"></ol>
+
+    <div class="meta" id="meta"></div>
+
+    <section id="images" class="images"></section>
+  </main>
 
   <script>
+    const product = {
+      name: "Anatomically Correct Judy Hopps Sex Doll 120cm",
+      price: 1899,
+      sourceUrl: "https://sexndolls.com/products/anatomically-correct-judy-hopps-sex-doll-120cm?srsltid=AfmBOorVC3ikE3nt1tLcOgEr6A6hwehePfQlHueDZykAtHlZ-ypMdOat",
+      images: [
+        "https://sexndolls.com/cdn/shop/files/anatomically-correct-judy-hopps-sex-doll-120cm-4346657_1200x1200.jpg",
+        "https://sexndolls.com/cdn/shop/files/anatomically-correct-judy-hopps-sex-doll-120cm-5157897_1200x1200.jpg",
+        "https://sexndolls.com/cdn/shop/files/anatomically-correct-judy-hopps-sex-doll-120cm-6349234.jpg",
+        "https://sexndolls.com/cdn/shop/files/anatomically-correct-judy-hopps-sex-doll-120cm-6349234_1200x1200.jpg"
+      ]
+    };
+
     const maxGuesses = 5;
-    let answer = '';
-    let answerTitle = '';
-    let positionNumber = '';
-    let guessCount = 0;
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const todayKey = `position-of-day-${todayStr}`;
+    let guesses = [];
+    let revealedCount = 0;
     let gameOver = false;
-    const letterStatus = {};
-    let currentGuess = ''; // Will contain full guess with spaces
-    let typedChars = []; // Array of characters (letters/numbers) user has typed (no spaces)
-    let positionLink = null;
 
-    function normalize(str) {
-      return str.normalize("NFKD")
-        .replace(/\p{Diacritic}/gu, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '')
-        .trim();
+    const priceInput = document.getElementById("priceInput");
+    const guessButton = document.getElementById("guessButton");
+    const resetButton = document.getElementById("resetButton");
+    const statusEl = document.getElementById("status");
+    const guessListEl = document.getElementById("guessList");
+    const imagesEl = document.getElementById("images");
+    const metaEl = document.getElementById("meta");
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(value);
     }
 
-    async function loadGame() {
-      const res = await fetch('positions_metadata.json?t=' + Date.now());
-      const data = await res.json();
-      
-      // Check for position parameter in URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const positionParam = urlParams.get('position');
-      
-      let position;
-      if (positionParam) {
-        // Find position by number
-        position = data.find(p => p.number === positionParam);
-        if (!position) {
-          // Fallback to random if not found
-          const index = Math.floor(Math.random() * data.length);
-          position = data[index];
-        }
+    function withinFivePercent(guess, actual) {
+      return Math.abs(guess - actual) / actual <= 0.05;
+    }
+
+    function revealImage() {
+      if (revealedCount >= product.images.length) return;
+      const img = document.createElement("img");
+      img.src = product.images[revealedCount];
+      img.alt = `${product.name} image ${revealedCount + 1}`;
+      img.loading = "lazy";
+      imagesEl.appendChild(img);
+      revealedCount += 1;
+    }
+
+    function renderGuesses() {
+      guessListEl.innerHTML = "";
+      guesses.forEach((guess, index) => {
+        const li = document.createElement("li");
+        const delta = Math.round(((guess - product.price) / product.price) * 1000) / 10;
+        const direction = delta === 0 ? "exact" : delta > 0 ? `${Math.abs(delta)}% high` : `${Math.abs(delta)}% low`;
+        li.textContent = `Guess ${index + 1}: ${formatMoney(guess)} (${direction})`;
+        guessListEl.appendChild(li);
+      });
+    }
+
+    function setStatus(message, cls = "") {
+      statusEl.textContent = message;
+      statusEl.className = `status ${cls}`.trim();
+    }
+
+    function handleGuess() {
+      if (gameOver) return;
+      const guess = Number(priceInput.value);
+      if (!Number.isFinite(guess) || guess <= 0) {
+        setStatus("Enter a valid price greater than 0.");
+        return;
+      }
+
+      guesses.push(guess);
+      renderGuesses();
+      revealImage();
+
+      if (withinFivePercent(guess, product.price)) {
+        gameOver = true;
+        setStatus(`You win. ${formatMoney(guess)} is within 5% of the real price (${formatMoney(product.price)}).`, "win");
+      } else if (guesses.length >= maxGuesses) {
+        gameOver = true;
+        setStatus(`Out of guesses. The price is ${formatMoney(product.price)}.`, "lose");
       } else {
-        // Randomly select a position
-        const index = Math.floor(Math.random() * data.length);
-        position = data[index];
+        const remaining = maxGuesses - guesses.length;
+        setStatus(`Not within 5% yet. ${remaining} guess${remaining === 1 ? "" : "es"} left.`);
       }
 
-      answerTitle = position.title;
-      answer = normalize(position.title);
-      positionNumber = position.number;
-      const imgElement = document.getElementById('positionImage');
-      const imageContainer = document.getElementById('imageContainer');
-      
-      console.log('Loading position:', position);
-      
-      // Clear any existing placeholder
-      const existingPlaceholder = imageContainer.querySelector('.image-placeholder');
-      if (existingPlaceholder) {
-        existingPlaceholder.remove();
-      }
-      
-      imgElement.alt = position.title;
-      
-      // Try local image first, then fallback to image_url
-      let imageSrc = position.image;
-      if (!imageSrc && position.image_url) {
-        imageSrc = position.image_url;
-      }
-      
-      console.log('Trying image:', imageSrc);
-      imgElement.src = imageSrc;
-      imgElement.style.display = 'block';
-      
-      imgElement.onload = function() {
-        console.log('Image loaded successfully:', imageSrc);
-        this.style.display = 'block';
-        this.style.border = '3px solid #444';
-        this.style.padding = '0';
-        this.style.backgroundColor = 'transparent';
-      };
-      
-      imgElement.onerror = function() {
-        console.error('Failed to load local image:', imageSrc);
-        
-        // If local image failed and we have image_url, try that
-        if (imageSrc === position.image && position.image_url) {
-          console.log('Trying fallback image_url:', position.image_url);
-          this.src = position.image_url;
-          return; // Let onerror handle it again if this also fails
-        }
-        
-        // Both failed - show placeholder
-        console.error('All image sources failed');
-        this.style.display = 'none';
-        
-        // Create a text placeholder
-        const placeholder = document.createElement('div');
-        placeholder.className = 'image-placeholder';
-        placeholder.textContent = `Image: ${position.title}`;
-        placeholder.style.color = '#888';
-        placeholder.style.fontSize = '18px';
-        placeholder.style.padding = '40px';
-        placeholder.style.border = '3px dashed #666';
-        placeholder.style.borderRadius = '8px';
-        placeholder.style.backgroundColor = '#1a1a1a';
-        placeholder.style.minHeight = '200px';
-        placeholder.style.display = 'flex';
-        placeholder.style.alignItems = 'center';
-        placeholder.style.justifyContent = 'center';
-        placeholder.style.maxWidth = '90%';
-        
-        imageContainer.appendChild(placeholder);
-      };
-
-      const idMatch = position.image.match(/(\d+)_/);
-      if (idMatch) {
-        positionLink = `https://sexpositions.club/positions/${idMatch[1]}.html`;
-      }
-
-      renderTiles();
-      renderKeyboard();
+      guessButton.disabled = gameOver;
+      priceInput.value = "";
+      priceInput.focus();
     }
 
-    function hashString(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash |= 0;
-      }
-      return Math.abs(hash);
+    function resetGame() {
+      guesses = [];
+      revealedCount = 0;
+      gameOver = false;
+      guessButton.disabled = false;
+      guessListEl.innerHTML = "";
+      imagesEl.innerHTML = "";
+      setStatus("New round started. Take your first guess.");
+      priceInput.value = "";
+      priceInput.focus();
     }
 
-    function renderTiles() {
-      const board = document.getElementById('tileBoard');
-      board.innerHTML = '';
-      for (let i = 0; i < maxGuesses; i++) {
-        const row = document.createElement('div');
-        row.className = 'tile-row';
-        for (let j = 0; j < answerTitle.length; j++) {
-          if (answerTitle[j] === ' ') {
-            // Add a gap spacer instead of a tile for spaces
-            const spacer = document.createElement('div');
-            spacer.className = 'tile-spacer';
-            spacer.style.width = '20px';
-            row.appendChild(spacer);
-          } else {
-            const tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.id = `tile-${i}-${j}`;
-            tile.innerHTML = `
-              <div class="flip-inner">
-                <div class="flip-front"></div>
-                <div class="flip-back"></div>
-              </div>
-            `;
-            row.appendChild(tile);
-          }
-        }
-        board.appendChild(row);
-      }
-    }
-
-    function updateTiles(rowIndex, guess) {
-      const answerArr = answerTitle.split('');
-      const guessArr = guess.split('');
-      const used = Array(answerArr.length).fill(false);
-
-      const result = guessArr.map((letter, i) => {
-        // Compare case-insensitively
-        if (letter.toLowerCase() === answerArr[i].toLowerCase()) {
-          used[i] = true;
-          return 'correct';
-        }
-        // Spaces must be in the exact position
-        if (letter === ' ' || answerArr[i] === ' ') {
-          return 'wrong';
-        }
-        return null;
-      });
-
-      guessArr.forEach((letter, i) => {
-        if (result[i]) return;
-        if (letter === ' ') {
-          result[i] = 'wrong';
-          return;
-        }
-        const idx = answerArr.findIndex((l, j) => !used[j] && l.toLowerCase() === letter.toLowerCase() && l !== ' ');
-        if (idx !== -1) {
-          result[i] = 'misplaced';
-          used[idx] = true;
-        } else {
-          result[i] = 'wrong';
-        }
-      });
-
-      // Use answerTitle position for tile ID (spaces don't have tiles, so skip them)
-      guessArr.forEach((letter, i) => {
-        if (letter === ' ') {
-          // Skip spaces - they don't have tiles
-          return;
-        }
-        // Tile ID uses the position in answerTitle (i), not a separate index
-        const tile = document.getElementById(`tile-${rowIndex}-${i}`);
-        if (!tile) return;
-        const front = tile.querySelector('.flip-front');
-        const back = tile.querySelector('.flip-back');
-
-        // Preserve case for numbers, uppercase for letters
-        const displayChar = /[0-9]/.test(letter) ? letter : letter.toUpperCase();
-        front.textContent = displayChar;
-        back.textContent = displayChar;
-        back.classList.add(result[i]);
-
-        // Update character status with priority: correct > misplaced > wrong
-        const charKey = letter.toLowerCase();
-        const prev = letterStatus[charKey];
-        if (!prev || prev === 'wrong') {
-          letterStatus[charKey] = result[i];
-        } else if (prev === 'misplaced' && result[i] === 'correct') {
-          letterStatus[charKey] = result[i]; // Upgrade misplaced to correct
-        }
-
-        // Count non-space letters for animation delay
-        let letterCount = 0;
-        for (let j = 0; j < i; j++) {
-          if (answerTitle[j] !== ' ') letterCount++;
-        }
-        setTimeout(() => tile.classList.add('flipped'), letterCount * 300);
-      });
-
-      setTimeout(updateKeyboard, guessArr.length * 300);
-    }
-
-    function renderKeyboard() {
-      const rows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-      const container = document.getElementById('keyboard');
-      container.innerHTML = '';
-      
-      // First two rows (QWERTYUIOP and ASDFGHJKL)
-      rows.slice(0, 2).forEach(row => {
-        const div = document.createElement('div');
-        div.className = 'keyboard-row';
-        row.split('').forEach(char => {
-          const btn = document.createElement('button');
-          btn.textContent = char;
-          btn.className = 'key';
-          btn.id = `key-${char}`;
-          btn.disabled = false;
-          btn.onclick = () => handleInput(char);
-          div.appendChild(btn);
-        });
-        container.appendChild(div);
-      });
-      
-      // Bottom row with Enter, ZXCVBNM, and Backspace
-      const bottomRow = document.createElement('div');
-      bottomRow.className = 'keyboard-row';
-      
-      // Enter key
-      const enterBtn = document.createElement('button');
-      enterBtn.textContent = 'ENTER';
-      enterBtn.className = 'key enter-key';
-      enterBtn.onclick = handleEnter;
-      bottomRow.appendChild(enterBtn);
-      
-      // Middle letters (ZXCVBNM)
-      rows[2].split('').forEach(char => {
-        const btn = document.createElement('button');
-        btn.textContent = char;
-        btn.className = 'key';
-        btn.id = `key-${char}`;
-        btn.disabled = false;
-        btn.onclick = () => handleInput(char);
-        bottomRow.appendChild(btn);
-      });
-      
-      // Backspace key
-      const backspaceBtn = document.createElement('button');
-      backspaceBtn.textContent = '⌫';
-      backspaceBtn.className = 'key backspace-key';
-      backspaceBtn.onclick = handleBackspace;
-      bottomRow.appendChild(backspaceBtn);
-      
-      container.appendChild(bottomRow);
-    }
-
-    function updateKeyboard() {
-      for (const char in letterStatus) {
-        // Only update keyboard keys (letters), numbers don't have keyboard keys
-        const key = document.getElementById(`key-${char.toUpperCase()}`);
-        if (key) {
-          key.classList.remove('correct', 'misplaced', 'wrong');
-          key.classList.add(letterStatus[char]);
-        }
-      }
-    }
-
-    function handleInput(char) {
-      if (gameOver) return;
-      if (char === ' ') return; // Spaces are auto-handled
-      if (!answerTitle) return; // Make sure answerTitle is set
-      
-      // Count how many non-space characters are in answerTitle
-      const totalChars = answerTitle.split('').filter(c => c !== ' ').length;
-      if (typedChars.length >= totalChars) return;
-      
-      // Add the typed character (preserve case for numbers, lowercase for letters)
-      const charToAdd = /[0-9]/.test(char) ? char : char.toLowerCase();
-      typedChars.push(charToAdd);
-      
-      // Build currentGuess by inserting typed characters into answerTitle structure
-      currentGuess = '';
-      let charIndex = 0;
-      for (let i = 0; i < answerTitle.length; i++) {
-        if (answerTitle[i] === ' ') {
-          currentGuess += ' ';
-        } else {
-          if (charIndex < typedChars.length) {
-            currentGuess += typedChars[charIndex];
-            charIndex++;
-          } else {
-            break; // Stop if we've used all typed characters
-          }
-        }
-      }
-      
-      // Find the tile ID - need to map typed character index to answerTitle position
-      // typedChars.length - 1 is the index of the character we just added
-      let tilePosition = -1;
-      let charCount = 0;
-      for (let i = 0; i < answerTitle.length; i++) {
-        if (answerTitle[i] !== ' ') {
-          if (charCount === typedChars.length - 1) {
-            tilePosition = i;
-            break;
-          }
-          charCount++;
-        }
-      }
-      
-      // Display in the correct tile (preserve case for numbers)
-      const displayChar = /[0-9]/.test(char) ? char : char.toUpperCase();
-      if (tilePosition >= 0) {
-        const tileId = `tile-${guessCount}-${tilePosition}`;
-        const tile = document.getElementById(tileId);
-        if (tile) {
-          const front = tile.querySelector('.flip-front');
-          if (front) {
-            front.textContent = displayChar;
-            front.style.color = 'white';
-            front.style.display = 'flex'; // Ensure it's visible
-            front.style.alignItems = 'center';
-            front.style.justifyContent = 'center';
-          }
-        } else {
-          // Fallback: try to find tile by index if position-based lookup fails
-          const allTiles = document.querySelectorAll(`#tileBoard .tile-row:nth-child(${guessCount + 1}) .tile`);
-          const charIndex = typedChars.length - 1;
-          if (allTiles[charIndex]) {
-            const front = allTiles[charIndex].querySelector('.flip-front');
-            if (front) {
-              front.textContent = displayChar;
-              front.style.color = 'white';
-              front.style.display = 'flex';
-              front.style.alignItems = 'center';
-              front.style.justifyContent = 'center';
-            }
-          }
-        }
-      }
-    }
-
-    function handleBackspace() {
-      if (gameOver || typedChars.length === 0) return;
-      
-      // Remove last typed character
-      typedChars.pop();
-      
-      // Rebuild currentGuess
-      currentGuess = '';
-      let charIndex = 0;
-      for (let i = 0; i < answerTitle.length; i++) {
-        if (answerTitle[i] === ' ') {
-          currentGuess += ' ';
-        } else {
-          if (charIndex < typedChars.length) {
-            currentGuess += typedChars[charIndex];
-            charIndex++;
-          } else {
-            break;
-          }
-        }
-      }
-      
-      // Find the tile ID for the last character
-      let tilePosition = 0;
-      let charCount = 0;
-      for (let i = 0; i < answerTitle.length; i++) {
-        if (answerTitle[i] !== ' ') {
-          if (charCount === typedChars.length) {
-            tilePosition = i;
-            break;
-          }
-          charCount++;
-        }
-      }
-      
-      // Clear the tile
-      const tile = document.getElementById(`tile-${guessCount}-${tilePosition}`);
-      if (tile) tile.querySelector('.flip-front').textContent = '';
-    }
-
-    function handleEnter() {
-      if (gameOver) return;
-      
-      // Count total characters needed
-      const totalChars = answerTitle.split('').filter(c => c !== ' ').length;
-      if (typedChars.length !== totalChars) return;
-      
-      // currentGuess should already be built correctly from typedChars
-      const normalizedGuess = normalize(currentGuess);
-      updateTiles(guessCount, currentGuess); // Pass original guess with spaces
-
-      if (normalizedGuess === answer) {
-        guessCount++; // Increment before showing result so count is correct
-        gameOver = true;
-        showResult(true);
-      } else if (++guessCount >= maxGuesses) {
-        gameOver = true;
-        showResult(false);
-      }
-
-      currentGuess = '';
-      typedChars = [];
-      
-      // Reset for next guess row
-      if (guessCount < maxGuesses) {
-        // Clear all tiles in the next row
-        for (let j = 0; j < answerTitle.length; j++) {
-          if (answerTitle[j] !== ' ') {
-            const tile = document.getElementById(`tile-${guessCount}-${j}`);
-            if (tile) {
-              const front = tile.querySelector('.flip-front');
-              if (front) front.textContent = '';
-            }
-          }
-        }
-      }
-    }
-
-    function getDayOfYear() {
-      // Calculate days since game launch date (July 30, 2025)
-      // This makes December 7, 2025 = day 130
-      const startDate = new Date('2025-07-31');
-      const now = new Date();
-      const diff = now - startDate;
-      const oneDay = 1000 * 60 * 60 * 24;
-      const daysSinceStart = Math.floor(diff / oneDay) + 1; // +1 to make it 1-indexed
-      return daysSinceStart;
-    }
-
-    function generateShareText() {
-      const dayNumber = getDayOfYear();
-      let shareText = `Positionle #${dayNumber}\n`;
-      shareText += `${guessCount}/${maxGuesses}\n\n`;
-      
-      // Generate emoji grid from the guesses
-      for (let row = 0; row < guessCount; row++) {
-        let rowText = '';
-        for (let j = 0; j < answerTitle.length; j++) {
-          if (answerTitle[j] === ' ') continue;
-          const tile = document.getElementById(`tile-${row}-${j}`);
-          if (tile) {
-            const back = tile.querySelector('.flip-back');
-            if (back) {
-              if (back.classList.contains('correct')) {
-                rowText += '🟩';
-              } else if (back.classList.contains('misplaced')) {
-                rowText += '🟨';
-              } else {
-                rowText += '⬛';
-              }
-            }
-          }
-        }
-        shareText += rowText + '\n';
-      }
-      
-      // Add link
-      shareText += `\n${window.location.origin}${window.location.pathname}`;
-      
-      return shareText;
-    }
-
-    function shareResult() {
-      const shareText = generateShareText();
-      copyToClipboard(shareText);
-    }
-
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        const button = document.getElementById('shareButton');
-        if (button) {
-          const originalText = button.textContent;
-          button.textContent = 'Copied!';
-          setTimeout(() => {
-            button.textContent = originalText;
-          }, 2000);
-        }
-      }).catch(() => {
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        
-        const button = document.getElementById('shareButton');
-        if (button) {
-          const originalText = button.textContent;
-          button.textContent = 'Copied!';
-          setTimeout(() => {
-            button.textContent = originalText;
-          }, 2000);
-        }
-      });
-    }
-
-    function showResult(won) {
-      const message = document.createElement('div');
-      message.style.marginTop = '20px';
-      message.style.fontSize = '20px';
-      message.textContent = won ? '🎉 YOU GOT IT!' : `Out of guesses! Answer was: ${answerTitle}`;
-      document.body.appendChild(message);
-
-      // Add share button
-      if (won || guessCount >= maxGuesses) {
-        const shareButton = document.createElement('button');
-        shareButton.id = 'shareButton';
-        shareButton.textContent = '📤 Share';
-        shareButton.style.marginTop = '15px';
-        shareButton.style.padding = '10px 20px';
-        shareButton.style.fontSize = '16px';
-        shareButton.style.backgroundColor = '#6aaa64';
-        shareButton.style.color = 'white';
-        shareButton.style.border = 'none';
-        shareButton.style.borderRadius = '4px';
-        shareButton.style.cursor = 'pointer';
-        shareButton.onclick = shareResult;
-        document.body.appendChild(shareButton);
-      }
-
-      if (positionLink) {
-        const link = document.createElement('a');
-        link.href = positionLink;
-        link.textContent = '🔗 View This Position on SexPositions.club';
-        link.target = '_blank';
-        link.style.display = 'block';
-        link.style.marginTop = '10px';
-        link.style.fontSize = '18px';
-        link.style.color = '#66f';
-        document.body.appendChild(link);
-      }
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (/^[a-zA-Z0-9]$/.test(e.key)) {
-        handleInput(e.key);
-      } else if (e.key === 'Backspace') {
-        handleBackspace();
-      } else if (e.key === 'Enter') {
-        handleEnter();
+    guessButton.addEventListener("click", handleGuess);
+    priceInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        handleGuess();
       }
     });
+    resetButton.addEventListener("click", resetGame);
 
-    loadGame();
+    metaEl.innerHTML = `Product: <strong>${product.name}</strong><br>Max guesses: <strong>${maxGuesses}</strong><br>Source: <a href="${product.sourceUrl}" target="_blank" rel="noreferrer">Product page</a>`;
+    setStatus("Round ready. Enter a price to start revealing images.");
   </script>
 </body>
 </html>
